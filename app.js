@@ -58,22 +58,23 @@ function renderTable(elementId, rows) {
   document.getElementById(elementId).innerHTML = `${head}<tbody>${body}</tbody>`;
 }
 
-/** The current round is the earliest with an unplayed fixture, else the last. */
+/** The round the calendar says we are in — not the oldest unfinished one. */
 function currentRoundNumber() {
-  const unplayed = league.fixtures
-    .filter((fixture) => !resultFor.has(fixture.id))
-    .map((fixture) => fixture.round);
-  return unplayed.length ? Math.min(...unplayed) : league.rounds.length;
+  const today = new Date().toISOString().slice(0, 10);
+  const open = league.rounds.filter((round) => round.opensAt <= today);
+  return open.length ? open[open.length - 1].n : league.rounds[0].n;
 }
 
-function fixtureLine(fixture) {
+function fixtureLine(fixture, showRound = false) {
   const result = resultFor.get(fixture.id);
   const score = result
     ? `<span class="score">${result.p1Games}-${result.p2Games}</span>`
     : '<span class="score pending">pending</span>';
+  const tag = showRound ? `<span class="vs">R${fixture.round}</span>` : '';
   return `
     <li>
-      <span class="who">${nameOf.get(fixture.p1)}<span class="vs">vs</span>${nameOf.get(fixture.p2)}</span>
+      <span class="who">${esc(nameOf.get(fixture.p1))}<span class="vs">vs</span>${esc(nameOf.get(fixture.p2))}</span>
+      ${tag}
       ${score}
     </li>`;
 }
@@ -83,10 +84,22 @@ function renderCurrentRound() {
   const round = league.rounds.find((entry) => entry.n === number);
   const fixtures = league.fixtures.filter((fixture) => fixture.round === number);
 
+  // Fixtures from rounds already past their deadline that nobody has played.
+  const overdue = league.fixtures.filter(
+    (fixture) => fixture.round < number && !resultFor.has(fixture.id),
+  );
+
   document.getElementById('round-title').textContent = `Round ${number}`;
   document.getElementById('round-deadline').textContent =
     round ? `Play by ${formatDate(round.deadline)}` : '';
-  document.getElementById('round-fixtures').innerHTML = fixtures.map(fixtureLine).join('');
+
+  const overdueBlock = overdue.length
+    ? `<li class="overdue-head">Still unplayed from earlier rounds</li>${
+      overdue.map((fixture) => fixtureLine(fixture, true)).join('')}`
+    : '';
+
+  document.getElementById('round-fixtures').innerHTML =
+    fixtures.map((fixture) => fixtureLine(fixture)).join('') + overdueBlock;
 }
 
 function bracketSlot(playerId, placeholder, games, isWinner) {
@@ -121,7 +134,7 @@ function renderAllFixtures() {
     return `
       <div class="round-block">
         <h4>Round ${round.n} &middot; by ${formatDate(round.deadline)}</h4>
-        <ul class="fixtures">${fixtures.map(fixtureLine).join('')}</ul>
+        <ul class="fixtures">${fixtures.map((fixture) => fixtureLine(fixture)).join('')}</ul>
       </div>`;
   }).join('');
 }

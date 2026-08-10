@@ -87,6 +87,11 @@ main { max-width: 1080px; margin: 0 auto; padding: 24px; display: grid; gap: 24p
 .fixtures li:last-child { border-bottom: 0; }
 .fixtures .who { flex: 1; min-width: 0; }
 .fixtures .vs { color: var(--label); font-size: 12px; padding: 0 4px; }
+.fixtures .overdue-head {
+  display: block; padding: 12px 0 4px; border-bottom: 0;
+  font: 600 10px 'Montserrat', sans-serif; letter-spacing: .14em;
+  text-transform: uppercase; color: var(--label);
+}
 .score { font: 500 13px 'DM Mono', monospace; color: var(--green); }
 .score.pending { color: var(--label); }
 
