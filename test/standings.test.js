@@ -129,3 +129,25 @@ test('ordering does not depend on the order players are passed in', () => {
   const reversed = computeTable([...ids].reverse(), fixtures, [], RULES, SEED).map((r) => r.playerId);
   assert.deepEqual(forward, reversed);
 });
+
+test('games won breaks a tie when head-to-head and game difference are level', () => {
+  // a beats c 3-1 and loses to d 2-3; b beats c 3-0 and loses to d 3-1
+  // (from d's side). a and b never meet, so head-to-head is level. Both
+  // finish on 3 points and a game difference of +1, but a has won more
+  // games overall (5 to 4).
+  const results = [
+    { fixtureId: find('a', 'c'), p1Games: 3, p2Games: 1 },
+    { fixtureId: find('c', 'b'), p1Games: 0, p2Games: 3 },
+    { fixtureId: find('a', 'd'), p1Games: 2, p2Games: 3 },
+    { fixtureId: find('d', 'b'), p1Games: 3, p2Games: 1 },
+  ];
+  const rows = accumulate(['a', 'b', 'c', 'd'], fixtures, results, RULES);
+
+  assert.equal(rows.get('a').points, rows.get('b').points, 'must be tied on points');
+  assert.equal(rows.get('a').gameDiff, rows.get('b').gameDiff, 'game difference must be level');
+  assert.ok(rows.get('a').gamesWon > rows.get('b').gamesWon, 'a must lead on games won');
+
+  const order = computeTable(['a', 'b', 'c', 'd'], fixtures, results, RULES, SEED)
+    .map((r) => r.playerId);
+  assert.ok(order.indexOf('a') < order.indexOf('b'), order.join(','));
+});
