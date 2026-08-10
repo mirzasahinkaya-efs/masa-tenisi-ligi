@@ -67,7 +67,7 @@ main { max-width: 1080px; margin: 0 auto; padding: 24px; display: grid; gap: 24p
   font-variant-numeric: tabular-nums;
   border-bottom: 1px solid var(--border);
 }
-.table td:nth-child(1) { color: var(--muted); width: 1%; }
+.table td:nth-child(1) { text-align: left; color: var(--muted); width: 1%; }
 .table td:nth-child(2) {
   text-align: left; font-family: 'Roboto', sans-serif;
   font-weight: 500; color: var(--text-strong); width: 99%;
