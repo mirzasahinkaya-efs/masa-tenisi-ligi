@@ -1,7 +1,11 @@
 # Efsora Table Tennis League
 
 Standings, fixtures and playoff bracket for the office league.
-Live: https://efsora.github.io/masa-tenisi-ligi/
+Live: https://mirzasahinkaya-efs.github.io/masa-tenisi-ligi/
+
+Intended to move to the `efsora` org once an owner can accept a repository
+transfer; GitHub redirects the old URL, so links shared before the move keep
+working.
 
 ## Format
 
@@ -23,7 +27,9 @@ never contradict a displayed table.
     npm test         # run the league logic tests
     npm run generate # regenerate data/league.json via scripts/generate-season.js
 
-Regenerating discards recorded results. Only do it before the season starts.
+Regenerating refuses to run once results are recorded or the draw is locked.
+Pass `--force` only if you really mean to discard the season — a regenerated
+draw also produces different fixture ids, so old results cannot be pasted back.
 
 ## Local preview
 
