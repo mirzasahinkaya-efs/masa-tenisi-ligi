@@ -104,3 +104,10 @@ test('a played playoff match carries its result', () => {
     { fixtureId: 'SF1', p1Games: 3, p2Games: 0 },
   );
 });
+
+test('the bracket definition cannot be mutated by a consumer', () => {
+  const before = PLAYOFF_FIXTURES[0].slotP1;
+  assert.throws(() => { PLAYOFF_FIXTURES[0].slotP1 = 'MUTATED'; }, TypeError);
+  assert.throws(() => { PLAYOFF_FIXTURES.push({ id: 'EXTRA' }); }, TypeError);
+  assert.equal(PLAYOFF_FIXTURES[0].slotP1, before);
+});
