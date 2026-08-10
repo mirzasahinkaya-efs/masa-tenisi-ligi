@@ -34,8 +34,11 @@ const formatDate = (iso) => new Date(`${iso}T00:00:00Z`).toLocaleDateString('en-
 const signed = (value) => (value > 0 ? `+${value}` : String(value));
 
 function renderProgress() {
-  const played = league.results.length;
-  document.getElementById('progress').textContent = `${played}/${allFixtures.length} matches played`;
+  const known = new Set(allFixtures.map((fixture) => fixture.id));
+  const played = new Set(
+    league.results.map((result) => result.fixtureId).filter((id) => known.has(id)),
+  ).size;
+  document.getElementById('progress').textContent = `${played}/${known.size} matches played`;
 }
 
 function renderTable(elementId, rows) {
