@@ -122,3 +122,10 @@ test('positions are sequential from one', () => {
   const table = computeTable(['a', 'b', 'c', 'd'], fixtures, [beat('a', 'b')], RULES, SEED);
   assert.deepEqual(table.map((r) => r.position), [1, 2, 3, 4]);
 });
+
+test('ordering does not depend on the order players are passed in', () => {
+  const ids = ['a', 'b', 'c', 'd'];
+  const forward = computeTable(ids, fixtures, [], RULES, SEED).map((r) => r.playerId);
+  const reversed = computeTable([...ids].reverse(), fixtures, [], RULES, SEED).map((r) => r.playerId);
+  assert.deepEqual(forward, reversed);
+});
