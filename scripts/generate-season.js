@@ -1,4 +1,4 @@
-import { mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { drawGroups } from '../lib/draw.js';
 import { generateGroupFixtures } from '../lib/schedule.js';
 import { PLAYOFF_FIXTURES } from '../lib/bracket.js';
@@ -38,9 +38,28 @@ const league = {
   results: [],
 };
 
+// Refuse to destroy a season in progress. A regenerated draw also produces
+// different fixture ids, so recorded results could not simply be pasted back.
+const target = new URL('../data/league.json', import.meta.url);
+if (!process.argv.includes('--force')) {
+  try {
+    const existing = JSON.parse(await readFile(target, 'utf8'));
+    if (existing.results?.length || existing.season?.drawLocked) {
+      console.error(
+        `Refusing to overwrite data/league.json: ${existing.results?.length ?? 0} `
+        + `result(s) recorded, drawLocked=${existing.season?.drawLocked}. `
+        + 'Re-run with --force if you really mean to discard the season.',
+      );
+      process.exit(1);
+    }
+  } catch (error) {
+    if (error.code !== 'ENOENT') throw error;
+  }
+}
+
 await mkdir(new URL('../data/', import.meta.url), { recursive: true });
 await writeFile(
-  new URL('../data/league.json', import.meta.url),
+  target,
   `${JSON.stringify(league, null, 2)}\n`,
   'utf8',
 );
