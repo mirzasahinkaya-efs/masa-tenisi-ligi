@@ -48,6 +48,11 @@ test('a group is incomplete until every one of its fixtures has a result', () =>
   assert.equal(isGroupComplete('A', fixtures, all), true);
 });
 
+test('a group with no fixtures is not complete', () => {
+  assert.equal(isGroupComplete('A', [], []), false);
+  assert.equal(isGroupComplete('NOPE', fixtures, completeAllGroups()), false);
+});
+
 test('slots stay null while the groups are unfinished', () => {
   const bracket = resolveBracket(tablesFrom([]), fixtures, []);
   for (const match of bracket) {
