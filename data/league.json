@@ -1,0 +1,605 @@
+{
+  "season": {
+    "id": "2026-autumn",
+    "name": "Efsora Table Tennis League",
+    "startDate": "2026-08-10",
+    "drawSeed": 20260810,
+    "admins": [
+      "U0AT8HQ7C9K"
+    ],
+    "drawLocked": false
+  },
+  "rules": {
+    "matchFormat": "best-of-5",
+    "gameTarget": 11,
+    "pointsWin": 3,
+    "pointsLoss": 0,
+    "tiebreakOrder": [
+      "headToHead",
+      "gameDiff",
+      "gamesWon",
+      "seededDraw"
+    ]
+  },
+  "players": [
+    {
+      "id": "aytac",
+      "name": "Aytaç Çeliktuğ",
+      "short": "Çeliktuğ",
+      "slackId": "U09CYKX6JHY",
+      "status": "provisional"
+    },
+    {
+      "id": "emre-y",
+      "name": "Emre Yıldız",
+      "short": "Yıldız",
+      "slackId": "U09DSGTCFAL",
+      "status": "provisional"
+    },
+    {
+      "id": "tolga",
+      "name": "Tolga Erdönmez",
+      "short": "Erdönmez",
+      "slackId": "U09LQ3PF6LC",
+      "status": "provisional"
+    },
+    {
+      "id": "emre-k",
+      "name": "Emre Kuru",
+      "short": "Kuru",
+      "slackId": "U0A68UYA1NX",
+      "status": "provisional"
+    },
+    {
+      "id": "defne",
+      "name": "Defne Gökner",
+      "short": "Gökner",
+      "slackId": "U0AFYKZMJEN",
+      "status": "provisional"
+    },
+    {
+      "id": "omer",
+      "name": "Ömer Yiğit Davran",
+      "short": "Davran",
+      "slackId": "U0APG48TL67",
+      "status": "provisional"
+    },
+    {
+      "id": "mirza",
+      "name": "Mirza Şahinkaya",
+      "short": "Şahinkaya",
+      "slackId": "U0AT8HQ7C9K",
+      "status": "provisional"
+    },
+    {
+      "id": "dogukan",
+      "name": "Doğukan Demirel",
+      "short": "Demirel",
+      "slackId": "U0B3Q4A63DL",
+      "status": "provisional"
+    },
+    {
+      "id": "emre-b",
+      "name": "Emre Beceriklican",
+      "short": "Beceriklican",
+      "slackId": "U0BE7QDL98B",
+      "status": "provisional"
+    },
+    {
+      "id": "tugberk",
+      "name": "Tuğberk Göktepe",
+      "short": "Göktepe",
+      "slackId": "U0BEE57LQ90",
+      "status": "provisional"
+    },
+    {
+      "id": "can",
+      "name": "Can Kaya",
+      "short": "Kaya",
+      "slackId": "U0BJ863HCNP",
+      "status": "provisional"
+    }
+  ],
+  "groups": {
+    "A": [
+      "aytac",
+      "can",
+      "dogukan",
+      "emre-k",
+      "emre-y",
+      "tugberk"
+    ],
+    "B": [
+      "defne",
+      "emre-b",
+      "mirza",
+      "omer",
+      "tolga"
+    ]
+  },
+  "rounds": [
+    {
+      "n": 1,
+      "opensAt": "2026-08-10",
+      "deadline": "2026-08-14"
+    },
+    {
+      "n": 2,
+      "opensAt": "2026-08-17",
+      "deadline": "2026-08-21"
+    },
+    {
+      "n": 3,
+      "opensAt": "2026-08-24",
+      "deadline": "2026-08-28"
+    },
+    {
+      "n": 4,
+      "opensAt": "2026-08-31",
+      "deadline": "2026-09-04"
+    },
+    {
+      "n": 5,
+      "opensAt": "2026-09-07",
+      "deadline": "2026-09-11"
+    },
+    {
+      "n": 6,
+      "opensAt": "2026-09-14",
+      "deadline": "2026-09-18"
+    },
+    {
+      "n": 7,
+      "opensAt": "2026-09-21",
+      "deadline": "2026-09-25"
+    },
+    {
+      "n": 8,
+      "opensAt": "2026-09-28",
+      "deadline": "2026-10-02"
+    },
+    {
+      "n": 9,
+      "opensAt": "2026-10-05",
+      "deadline": "2026-10-09"
+    },
+    {
+      "n": 10,
+      "opensAt": "2026-10-12",
+      "deadline": "2026-10-16"
+    }
+  ],
+  "fixtures": [
+    {
+      "id": "A-R1-M1",
+      "stage": "group",
+      "group": "A",
+      "round": 1,
+      "p1": "aytac",
+      "p2": "tugberk"
+    },
+    {
+      "id": "A-R1-M2",
+      "stage": "group",
+      "group": "A",
+      "round": 1,
+      "p1": "can",
+      "p2": "emre-y"
+    },
+    {
+      "id": "A-R1-M3",
+      "stage": "group",
+      "group": "A",
+      "round": 1,
+      "p1": "dogukan",
+      "p2": "emre-k"
+    },
+    {
+      "id": "A-R2-M1",
+      "stage": "group",
+      "group": "A",
+      "round": 2,
+      "p1": "aytac",
+      "p2": "emre-y"
+    },
+    {
+      "id": "A-R2-M2",
+      "stage": "group",
+      "group": "A",
+      "round": 2,
+      "p1": "tugberk",
+      "p2": "emre-k"
+    },
+    {
+      "id": "A-R2-M3",
+      "stage": "group",
+      "group": "A",
+      "round": 2,
+      "p1": "can",
+      "p2": "dogukan"
+    },
+    {
+      "id": "A-R3-M1",
+      "stage": "group",
+      "group": "A",
+      "round": 3,
+      "p1": "aytac",
+      "p2": "emre-k"
+    },
+    {
+      "id": "A-R3-M2",
+      "stage": "group",
+      "group": "A",
+      "round": 3,
+      "p1": "emre-y",
+      "p2": "dogukan"
+    },
+    {
+      "id": "A-R3-M3",
+      "stage": "group",
+      "group": "A",
+      "round": 3,
+      "p1": "tugberk",
+      "p2": "can"
+    },
+    {
+      "id": "A-R4-M1",
+      "stage": "group",
+      "group": "A",
+      "round": 4,
+      "p1": "aytac",
+      "p2": "dogukan"
+    },
+    {
+      "id": "A-R4-M2",
+      "stage": "group",
+      "group": "A",
+      "round": 4,
+      "p1": "emre-k",
+      "p2": "can"
+    },
+    {
+      "id": "A-R4-M3",
+      "stage": "group",
+      "group": "A",
+      "round": 4,
+      "p1": "emre-y",
+      "p2": "tugberk"
+    },
+    {
+      "id": "A-R5-M1",
+      "stage": "group",
+      "group": "A",
+      "round": 5,
+      "p1": "aytac",
+      "p2": "can"
+    },
+    {
+      "id": "A-R5-M2",
+      "stage": "group",
+      "group": "A",
+      "round": 5,
+      "p1": "dogukan",
+      "p2": "tugberk"
+    },
+    {
+      "id": "A-R5-M3",
+      "stage": "group",
+      "group": "A",
+      "round": 5,
+      "p1": "emre-k",
+      "p2": "emre-y"
+    },
+    {
+      "id": "A-R6-M1",
+      "stage": "group",
+      "group": "A",
+      "round": 6,
+      "p1": "tugberk",
+      "p2": "aytac"
+    },
+    {
+      "id": "A-R6-M2",
+      "stage": "group",
+      "group": "A",
+      "round": 6,
+      "p1": "emre-y",
+      "p2": "can"
+    },
+    {
+      "id": "A-R6-M3",
+      "stage": "group",
+      "group": "A",
+      "round": 6,
+      "p1": "emre-k",
+      "p2": "dogukan"
+    },
+    {
+      "id": "A-R7-M1",
+      "stage": "group",
+      "group": "A",
+      "round": 7,
+      "p1": "emre-y",
+      "p2": "aytac"
+    },
+    {
+      "id": "A-R7-M2",
+      "stage": "group",
+      "group": "A",
+      "round": 7,
+      "p1": "emre-k",
+      "p2": "tugberk"
+    },
+    {
+      "id": "A-R7-M3",
+      "stage": "group",
+      "group": "A",
+      "round": 7,
+      "p1": "dogukan",
+      "p2": "can"
+    },
+    {
+      "id": "A-R8-M1",
+      "stage": "group",
+      "group": "A",
+      "round": 8,
+      "p1": "emre-k",
+      "p2": "aytac"
+    },
+    {
+      "id": "A-R8-M2",
+      "stage": "group",
+      "group": "A",
+      "round": 8,
+      "p1": "dogukan",
+      "p2": "emre-y"
+    },
+    {
+      "id": "A-R8-M3",
+      "stage": "group",
+      "group": "A",
+      "round": 8,
+      "p1": "can",
+      "p2": "tugberk"
+    },
+    {
+      "id": "A-R9-M1",
+      "stage": "group",
+      "group": "A",
+      "round": 9,
+      "p1": "dogukan",
+      "p2": "aytac"
+    },
+    {
+      "id": "A-R9-M2",
+      "stage": "group",
+      "group": "A",
+      "round": 9,
+      "p1": "can",
+      "p2": "emre-k"
+    },
+    {
+      "id": "A-R9-M3",
+      "stage": "group",
+      "group": "A",
+      "round": 9,
+      "p1": "tugberk",
+      "p2": "emre-y"
+    },
+    {
+      "id": "A-R10-M1",
+      "stage": "group",
+      "group": "A",
+      "round": 10,
+      "p1": "can",
+      "p2": "aytac"
+    },
+    {
+      "id": "A-R10-M2",
+      "stage": "group",
+      "group": "A",
+      "round": 10,
+      "p1": "tugberk",
+      "p2": "dogukan"
+    },
+    {
+      "id": "A-R10-M3",
+      "stage": "group",
+      "group": "A",
+      "round": 10,
+      "p1": "emre-y",
+      "p2": "emre-k"
+    },
+    {
+      "id": "B-R1-M1",
+      "stage": "group",
+      "group": "B",
+      "round": 1,
+      "p1": "emre-b",
+      "p2": "tolga"
+    },
+    {
+      "id": "B-R1-M2",
+      "stage": "group",
+      "group": "B",
+      "round": 1,
+      "p1": "mirza",
+      "p2": "omer"
+    },
+    {
+      "id": "B-R2-M1",
+      "stage": "group",
+      "group": "B",
+      "round": 2,
+      "p1": "defne",
+      "p2": "tolga"
+    },
+    {
+      "id": "B-R2-M2",
+      "stage": "group",
+      "group": "B",
+      "round": 2,
+      "p1": "emre-b",
+      "p2": "mirza"
+    },
+    {
+      "id": "B-R3-M1",
+      "stage": "group",
+      "group": "B",
+      "round": 3,
+      "p1": "defne",
+      "p2": "omer"
+    },
+    {
+      "id": "B-R3-M2",
+      "stage": "group",
+      "group": "B",
+      "round": 3,
+      "p1": "tolga",
+      "p2": "mirza"
+    },
+    {
+      "id": "B-R4-M1",
+      "stage": "group",
+      "group": "B",
+      "round": 4,
+      "p1": "defne",
+      "p2": "mirza"
+    },
+    {
+      "id": "B-R4-M2",
+      "stage": "group",
+      "group": "B",
+      "round": 4,
+      "p1": "omer",
+      "p2": "emre-b"
+    },
+    {
+      "id": "B-R5-M1",
+      "stage": "group",
+      "group": "B",
+      "round": 5,
+      "p1": "defne",
+      "p2": "emre-b"
+    },
+    {
+      "id": "B-R5-M2",
+      "stage": "group",
+      "group": "B",
+      "round": 5,
+      "p1": "omer",
+      "p2": "tolga"
+    },
+    {
+      "id": "B-R6-M1",
+      "stage": "group",
+      "group": "B",
+      "round": 6,
+      "p1": "tolga",
+      "p2": "emre-b"
+    },
+    {
+      "id": "B-R6-M2",
+      "stage": "group",
+      "group": "B",
+      "round": 6,
+      "p1": "omer",
+      "p2": "mirza"
+    },
+    {
+      "id": "B-R7-M1",
+      "stage": "group",
+      "group": "B",
+      "round": 7,
+      "p1": "tolga",
+      "p2": "defne"
+    },
+    {
+      "id": "B-R7-M2",
+      "stage": "group",
+      "group": "B",
+      "round": 7,
+      "p1": "mirza",
+      "p2": "emre-b"
+    },
+    {
+      "id": "B-R8-M1",
+      "stage": "group",
+      "group": "B",
+      "round": 8,
+      "p1": "omer",
+      "p2": "defne"
+    },
+    {
+      "id": "B-R8-M2",
+      "stage": "group",
+      "group": "B",
+      "round": 8,
+      "p1": "mirza",
+      "p2": "tolga"
+    },
+    {
+      "id": "B-R9-M1",
+      "stage": "group",
+      "group": "B",
+      "round": 9,
+      "p1": "mirza",
+      "p2": "defne"
+    },
+    {
+      "id": "B-R9-M2",
+      "stage": "group",
+      "group": "B",
+      "round": 9,
+      "p1": "emre-b",
+      "p2": "omer"
+    },
+    {
+      "id": "B-R10-M1",
+      "stage": "group",
+      "group": "B",
+      "round": 10,
+      "p1": "emre-b",
+      "p2": "defne"
+    },
+    {
+      "id": "B-R10-M2",
+      "stage": "group",
+      "group": "B",
+      "round": 10,
+      "p1": "tolga",
+      "p2": "omer"
+    }
+  ],
+  "playoffFixtures": [
+    {
+      "id": "SF1",
+      "stage": "playoff",
+      "label": "Semifinal 1",
+      "slotP1": "A1",
+      "slotP2": "B2"
+    },
+    {
+      "id": "SF2",
+      "stage": "playoff",
+      "label": "Semifinal 2",
+      "slotP1": "B1",
+      "slotP2": "A2"
+    },
+    {
+      "id": "FINAL",
+      "stage": "playoff",
+      "label": "Final",
+      "slotP1": "W-SF1",
+      "slotP2": "W-SF2"
+    },
+    {
+      "id": "THIRD",
+      "stage": "playoff",
+      "label": "Third place",
+      "slotP1": "L-SF1",
+      "slotP2": "L-SF2"
+    }
+  ],
+  "results": []
+}
