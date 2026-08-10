@@ -1,7 +1,20 @@
 import { computeTable } from './lib/standings.js';
 import { resolveBracket } from './lib/bracket.js';
 
-const league = await fetch('./data/league.json').then((response) => response.json());
+const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (character) => ({
+  '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+}[character]));
+
+let league;
+try {
+  const response = await fetch('./data/league.json', { cache: 'no-store' });
+  if (!response.ok) throw new Error(`HTTP ${response.status}`);
+  league = await response.json();
+} catch (error) {
+  document.getElementById('progress').textContent =
+    `Could not load league data (${error.message})`;
+  throw error;
+}
 
 const nameOf = new Map(league.players.map((player) => [player.id, player.short]));
 const fullNameOf = new Map(league.players.map((player) => [player.id, player.name]));
@@ -78,8 +91,8 @@ function renderCurrentRound() {
 
 function bracketSlot(playerId, placeholder, games, isWinner) {
   const label = playerId
-    ? `<span class="${isWinner ? 'slot--winner' : ''}">${nameOf.get(playerId)}</span>`
-    : `<span class="slot--empty">${placeholder}</span>`;
+    ? `<span class="${isWinner ? 'slot--winner' : ''}">${esc(nameOf.get(playerId))}</span>`
+    : `<span class="slot--empty">${esc(placeholder)}</span>`;
   const score = games === null ? '' : `<span class="slot__games">${games}</span>`;
   return `<div class="slot">${label}${score}</div>`;
 }
@@ -95,7 +108,7 @@ function renderBracket() {
 
     return `
       <div class="bracket-match ${isFinal ? 'bracket-match--final' : ''}">
-        <div class="bracket-match__label">${match.label}</div>
+        <div class="bracket-match__label">${esc(match.label)}</div>
         ${bracketSlot(match.p1, match.slotP1, result ? result.p1Games : null, p1Won)}
         ${bracketSlot(match.p2, match.slotP2, result ? result.p2Games : null, p2Won)}
       </div>`;
