@@ -24,78 +24,78 @@
   "players": [
     {
       "id": "aytac",
-      "name": "Aytaç Çeliktuğ",
-      "short": "Çeliktuğ",
+      "name": "Aytaç Ç.",
+      "short": "Aytaç Ç.",
       "slackId": "U09CYKX6JHY",
       "status": "provisional"
     },
     {
       "id": "emre-y",
-      "name": "Emre Yıldız",
-      "short": "Yıldız",
+      "name": "Emre Y.",
+      "short": "Emre Y.",
       "slackId": "U09DSGTCFAL",
       "status": "provisional"
     },
     {
       "id": "tolga",
-      "name": "Tolga Erdönmez",
-      "short": "Erdönmez",
+      "name": "Tolga E.",
+      "short": "Tolga E.",
       "slackId": "U09LQ3PF6LC",
       "status": "provisional"
     },
     {
       "id": "emre-k",
-      "name": "Emre Kuru",
-      "short": "Kuru",
+      "name": "Emre K.",
+      "short": "Emre K.",
       "slackId": "U0A68UYA1NX",
       "status": "provisional"
     },
     {
       "id": "defne",
-      "name": "Defne Gökner",
-      "short": "Gökner",
+      "name": "Defne G.",
+      "short": "Defne G.",
       "slackId": "U0AFYKZMJEN",
       "status": "provisional"
     },
     {
       "id": "omer",
-      "name": "Ömer Yiğit Davran",
-      "short": "Davran",
+      "name": "Ömer D.",
+      "short": "Ömer D.",
       "slackId": "U0APG48TL67",
       "status": "provisional"
     },
     {
       "id": "mirza",
-      "name": "Mirza Şahinkaya",
-      "short": "Şahinkaya",
+      "name": "Mirza Ş.",
+      "short": "Mirza Ş.",
       "slackId": "U0AT8HQ7C9K",
       "status": "provisional"
     },
     {
       "id": "dogukan",
-      "name": "Doğukan Demirel",
-      "short": "Demirel",
+      "name": "Doğukan D.",
+      "short": "Doğukan D.",
       "slackId": "U0B3Q4A63DL",
       "status": "provisional"
     },
     {
       "id": "emre-b",
-      "name": "Emre Beceriklican",
-      "short": "Beceriklican",
+      "name": "Emre B.",
+      "short": "Emre B.",
       "slackId": "U0BE7QDL98B",
       "status": "provisional"
     },
     {
       "id": "tugberk",
-      "name": "Tuğberk Göktepe",
-      "short": "Göktepe",
+      "name": "Tuğberk G.",
+      "short": "Tuğberk G.",
       "slackId": "U0BEE57LQ90",
       "status": "provisional"
     },
     {
       "id": "can",
-      "name": "Can Kaya",
-      "short": "Kaya",
+      "name": "Can K.",
+      "short": "Can K.",
       "slackId": "U0BJ863HCNP",
       "status": "provisional"
     }
