@@ -39,15 +39,17 @@ function renderProgress() {
 }
 
 function renderTable(elementId, rows) {
+  const started = rows.some((row) => row.played > 0);
+
   const head = `
     <thead><tr>
       <th>#</th><th>Player</th><th>P</th><th>W</th><th>L</th><th>Diff</th><th>Pts</th>
     </tr></thead>`;
 
   const body = rows.map((row) => `
-    <tr class="${row.position <= 2 ? 'qualifying' : ''}">
-      <td>${row.position}</td>
-      <td title="${fullNameOf.get(row.playerId)}">${nameOf.get(row.playerId)}</td>
+    <tr class="${started && row.position <= 2 ? 'qualifying' : ''}">
+      <td>${started ? row.position : '–'}</td>
+      <td title="${esc(fullNameOf.get(row.playerId))}">${esc(nameOf.get(row.playerId))}</td>
       <td>${row.played}</td>
       <td>${row.won}</td>
       <td>${row.lost}</td>
