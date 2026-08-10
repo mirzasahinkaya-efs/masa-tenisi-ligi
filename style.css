@@ -1,16 +1,27 @@
+/*
+ * The page uses Efsora's #131a2e rather than the near-black #0a0e1c the site
+ * uses behind full-bleed imagery: a standings table is mostly empty space, and
+ * at #0a0e1c that space read as one undifferentiated dark mass.
+ *
+ * Panels are lifted past the brand's #1a2342 to #202b52 for a deliberate
+ * reason: panel-against-page contrast is only 1.12:1 at #1a2342, so panels
+ * were defined by their border alone. #202b52 raises that to 1.26:1. It is
+ * also the ceiling — panels lighter than roughly #232f58 drop --blue below the
+ * 4.5:1 AA floor for small text. Accent hues are the brand's, untouched.
+ */
 :root {
-  --bg: #0a0e1c;
-  --surface-1: #131a2e;
-  --surface-2: #1a2342;
+  --bg: #131a2e;
+  --surface-1: #202b52;
+  --surface-2: #2a3766;
   --blue: #3d9ce8;
   --blue-mid: #2d94dc;
   --green: #4ec9a0;
-  --border: rgba(255, 255, 255, .08);
-  --border-strong: rgba(255, 255, 255, .14);
+  --border: rgba(255, 255, 255, .12);
+  --border-strong: rgba(255, 255, 255, .18);
   --text: rgba(255, 255, 255, .92);
   --text-strong: rgba(255, 255, 255, .98);
-  --muted: rgba(255, 255, 255, .55);
-  --label: rgba(255, 255, 255, .5);
+  --muted: rgba(255, 255, 255, .68);
+  --label: rgba(255, 255, 255, .62);
 }
 
 *, *::before, *::after { box-sizing: border-box; border-radius: 0; }
