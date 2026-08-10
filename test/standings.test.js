@@ -59,12 +59,28 @@ test('players are ordered by points descending', () => {
 });
 
 test('head-to-head breaks a tie on points', () => {
-  // a and b both win once; b beat a, so b places first.
-  const table = computeTable(['a', 'b', 'c', 'd'], fixtures, [
-    { fixtureId: find('b', 'a'), p1Games: 3, p2Games: 0 },
-    beat('a', 'c'),
-  ], RULES, SEED);
-  const order = table.map((r) => r.playerId);
+  // a and b tie on 3 points. Head-to-head favours b (b won their match),
+  // but overall game difference favours a (-1 against b's -2). The two
+  // criteria point in OPPOSITE directions on purpose: asserting b above a
+  // can only pass via head-to-head, so deleting that level fails the test.
+  const results = [
+    { fixtureId: find('b', 'a'), p1Games: 3, p2Games: 2 },
+    { fixtureId: find('a', 'd'), p1Games: 3, p2Games: 0 },
+    { fixtureId: find('c', 'a'), p1Games: 3, p2Games: 0 },
+    { fixtureId: find('c', 'b'), p1Games: 3, p2Games: 0 },
+  ];
+  const rows = accumulate(['a', 'b', 'c', 'd'], fixtures, results, RULES);
+
+  // Guard the premise: if fixture data drifts so the two criteria agree,
+  // fail here rather than silently going back to proving nothing.
+  assert.equal(rows.get('a').points, rows.get('b').points, 'must be tied on points');
+  assert.ok(
+    rows.get('a').gameDiff > rows.get('b').gameDiff,
+    'game difference must favour a, opposing head-to-head',
+  );
+
+  const order = computeTable(['a', 'b', 'c', 'd'], fixtures, results, RULES, SEED)
+    .map((r) => r.playerId);
   assert.ok(order.indexOf('b') < order.indexOf('a'), order.join(','));
 });
 
