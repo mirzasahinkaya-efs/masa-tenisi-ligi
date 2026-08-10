@@ -4,7 +4,7 @@ import { accumulate, computeTable } from '../lib/standings.js';
 import { generateGroupFixtures } from '../lib/schedule.js';
 
 const RULES = { pointsWin: 3, pointsLoss: 0 };
-const SEED = 4;
+const SEED = 20260810;
 
 /** Two fixtures per pair, so results can be attached by fixture id. */
 const fixtures = generateGroupFixtures('A', ['a', 'b', 'c', 'd']);
@@ -52,6 +52,9 @@ test('players are ordered by points descending', () => {
   const table = computeTable(['a', 'b', 'c', 'd'], fixtures, [
     beat('a', 'b'), beat('a', 'c'), beat('b', 'c'),
   ], RULES, SEED);
+  // a 6 pts, b 3 pts, then c and d both on 0. c and d have not met, so game
+  // difference separates them: d has never played (0) and c lost 2–6 (-4),
+  // which puts d above c.
   assert.deepEqual(table.map((r) => r.playerId), ['a', 'b', 'd', 'c']);
 });
 
