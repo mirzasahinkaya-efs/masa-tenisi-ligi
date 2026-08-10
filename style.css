@@ -1,0 +1,120 @@
+:root {
+  --bg: #0a0e1c;
+  --surface-1: #131a2e;
+  --surface-2: #1a2342;
+  --blue: #3d9ce8;
+  --blue-mid: #2d94dc;
+  --green: #4ec9a0;
+  --border: rgba(255, 255, 255, .08);
+  --border-strong: rgba(255, 255, 255, .14);
+  --text: rgba(255, 255, 255, .92);
+  --text-strong: rgba(255, 255, 255, .98);
+  --muted: rgba(255, 255, 255, .55);
+  --label: rgba(255, 255, 255, .5);
+}
+
+*, *::before, *::after { box-sizing: border-box; border-radius: 0; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 400 15px/1.55 'Roboto', sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3 { font-family: 'Montserrat', sans-serif; margin: 0; }
+
+.masthead {
+  display: flex; flex-wrap: wrap; gap: 16px;
+  align-items: flex-end; justify-content: space-between;
+  padding: 40px 24px 24px;
+  border-bottom: 1px solid var(--border-strong);
+}
+.eyebrow {
+  display: block; margin-bottom: 6px;
+  font: 600 11px/1 'Montserrat', sans-serif;
+  letter-spacing: .22em; text-transform: uppercase; color: var(--blue);
+}
+.masthead h1 { font-size: clamp(26px, 5vw, 42px); font-weight: 900; letter-spacing: -.02em; }
+.progress { margin: 0; font: 500 13px 'DM Mono', monospace; color: var(--muted); }
+
+main { max-width: 1080px; margin: 0 auto; padding: 24px; display: grid; gap: 24px; }
+
+.panel { background: var(--surface-1); border: 1px solid var(--border); padding: 20px; }
+.panel > h2 {
+  font-size: 13px; font-weight: 700; letter-spacing: .16em;
+  text-transform: uppercase; color: var(--label); margin-bottom: 16px;
+}
+
+.groups { display: grid; gap: 20px; grid-template-columns: 1fr 1fr; }
+.group h3 {
+  font-size: 15px; font-weight: 700; color: var(--text-strong);
+  padding-bottom: 8px; margin-bottom: 8px; border-bottom: 1px solid var(--border);
+}
+.table-scroll { overflow-x: auto; }
+
+.table { width: 100%; border-collapse: collapse; white-space: nowrap; }
+.table th {
+  font: 500 10px 'Montserrat', sans-serif; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--label);
+  text-align: right; padding: 6px 8px; border-bottom: 1px solid var(--border);
+}
+.table th:nth-child(-n+2) { text-align: left; }
+.table td {
+  padding: 9px 8px; text-align: right;
+  font: 500 13px 'DM Mono', monospace;
+  font-variant-numeric: tabular-nums;
+  border-bottom: 1px solid var(--border);
+}
+.table td:nth-child(1) { color: var(--muted); width: 1%; }
+.table td:nth-child(2) {
+  text-align: left; font-family: 'Roboto', sans-serif;
+  font-weight: 500; color: var(--text-strong); width: 99%;
+}
+.table tbody tr.qualifying { background: var(--surface-2); box-shadow: inset 3px 0 0 var(--green); }
+.table .pts { color: var(--text-strong); font-weight: 500; }
+
+.footnote, .deadline { font-size: 12px; color: var(--muted); margin: 14px 0 0; }
+.deadline { margin: 0 0 14px; font-family: 'DM Mono', monospace; }
+#round-title { color: var(--text-strong); font-size: 15px; letter-spacing: 0; text-transform: none; }
+
+.fixtures { list-style: none; margin: 0; padding: 0; }
+.fixtures li {
+  display: flex; align-items: baseline; gap: 10px;
+  padding: 10px 0; border-bottom: 1px solid var(--border);
+}
+.fixtures li:last-child { border-bottom: 0; }
+.fixtures .who { flex: 1; min-width: 0; }
+.fixtures .vs { color: var(--label); font-size: 12px; padding: 0 4px; }
+.score { font: 500 13px 'DM Mono', monospace; color: var(--green); }
+.score.pending { color: var(--label); }
+
+.bracket { display: grid; gap: 12px; grid-template-columns: repeat(2, 1fr); }
+.bracket-match { border: 1px solid var(--border); background: var(--surface-2); padding: 12px; }
+.bracket-match__label {
+  font: 600 10px 'Montserrat', sans-serif; letter-spacing: .14em;
+  text-transform: uppercase; color: var(--blue); margin-bottom: 8px;
+}
+.bracket-match--final { grid-column: 1 / -1; border-color: var(--blue-mid); }
+.slot {
+  display: flex; justify-content: space-between; gap: 12px;
+  padding: 6px 0; font-size: 14px;
+}
+.slot + .slot { border-top: 1px solid var(--border); }
+.slot--empty { color: var(--label); font-family: 'DM Mono', monospace; font-size: 12px; }
+.slot--winner { color: var(--green); font-weight: 500; }
+.slot__games { font: 500 13px 'DM Mono', monospace; }
+
+.round-block { margin-bottom: 18px; }
+.round-block h4 {
+  font: 600 11px 'Montserrat', sans-serif; letter-spacing: .14em;
+  text-transform: uppercase; color: var(--label);
+  margin: 0 0 6px; padding-bottom: 6px; border-bottom: 1px solid var(--border);
+}
+
+@media (max-width: 720px) {
+  .groups, .bracket { grid-template-columns: 1fr; }
+  .masthead { padding: 28px 16px 20px; }
+  main { padding: 16px; }
+}

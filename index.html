@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Efsora Table Tennis League</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;800;900&family=Roboto:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./style.css">
+</head>
+<body>
+<header class="masthead">
+  <div class="masthead__title">
+    <span class="eyebrow">Efsora</span>
+    <h1>Table Tennis League</h1>
+  </div>
+  <p class="progress" id="progress"></p>
+</header>
+
+<main>
+  <section class="panel">
+    <h2>Standings</h2>
+    <div class="groups">
+      <div class="group">
+        <h3>Group A</h3>
+        <div class="table-scroll"><table class="table" id="group-a"></table></div>
+      </div>
+      <div class="group">
+        <h3>Group B</h3>
+        <div class="table-scroll"><table class="table" id="group-b"></table></div>
+      </div>
+    </div>
+    <p class="footnote">Top two in each group advance. Win 3 pts, loss 0. Best of 5 games to 11.</p>
+  </section>
+
+  <section class="panel">
+    <h2 id="round-title">Round</h2>
+    <p class="deadline" id="round-deadline"></p>
+    <ul class="fixtures" id="round-fixtures"></ul>
+  </section>
+
+  <section class="panel">
+    <h2>Playoffs</h2>
+    <div class="bracket" id="bracket"></div>
+  </section>
+
+  <section class="panel">
+    <h2>All fixtures</h2>
+    <div id="all-fixtures"></div>
+  </section>
+</main>
+
+<script type="module" src="./app.js"></script>
+</body>
+</html>
