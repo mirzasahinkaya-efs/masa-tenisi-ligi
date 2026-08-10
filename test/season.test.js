@@ -1,34 +1,24 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
-import { ROSTER } from '../scripts/roster.js';
 import { parseScore } from '../lib/validate.js';
 
 const league = JSON.parse(
   await readFile(new URL('../data/league.json', import.meta.url), 'utf8'),
 );
 
-test('all eleven players are present with unique ids and Slack ids', () => {
-  assert.equal(league.players.length, 11);
-  assert.equal(new Set(league.players.map((p) => p.id)).size, 11);
-  assert.equal(new Set(league.players.map((p) => p.slackId)).size, 11);
-  assert.deepEqual(
-    league.players.map((p) => p.id).sort(),
-    ROSTER.map((p) => p.id).sort(),
-  );
+test('players have unique ids, Slack ids and short names', () => {
+  const count = league.players.length;
+  assert.ok(count >= 4, 'a league needs at least four players');
+  assert.equal(new Set(league.players.map((p) => p.id)).size, count);
+  assert.equal(new Set(league.players.map((p) => p.slackId)).size, count);
+  assert.equal(new Set(league.players.map((p) => p.short)).size, count);
 });
 
-test('short names are unique, so the three Emres are distinguishable', () => {
-  assert.equal(new Set(league.players.map((p) => p.short)).size, 11);
-});
-
-test('groups hold six and five players and cover the roster once', () => {
-  assert.equal(league.groups.A.length, 6);
-  assert.equal(league.groups.B.length, 5);
-  assert.deepEqual(
-    [...league.groups.A, ...league.groups.B].sort(),
-    league.players.map((p) => p.id).sort(),
-  );
+test('the two groups partition the roster and are near-equal in size', () => {
+  const ids = league.players.map((p) => p.id).sort();
+  assert.deepEqual([...league.groups.A, ...league.groups.B].sort(), ids);
+  assert.ok(Math.abs(league.groups.A.length - league.groups.B.length) <= 1);
 });
 
 test('the group stage has fifty fixtures over ten rounds', () => {

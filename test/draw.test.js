@@ -35,7 +35,17 @@ test('each group is returned in alphabetical order', () => {
 });
 
 test('rejects a roster that does not match the group sizes', () => {
-  assert.throws(() => drawGroups(['a', 'b'], 1), /2 players.*11/);
+  assert.throws(() => drawGroups(['a', 'b'], 1, { A: 6, B: 5 }), /2 players.*11/);
+});
+
+test('group sizes follow the roster size', () => {
+  const ten = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j'];
+  const { A, B } = drawGroups(ten, 20260810);
+  assert.equal(A.length, 5);
+  assert.equal(B.length, 5);
+  const twelve = [...ten, 'k', 'l'];
+  assert.equal(drawGroups(twelve, 20260810).A.length, 6);
+  assert.equal(drawGroups(twelve, 20260810).B.length, 6);
 });
 
 test('shuffling preserves every member', () => {
