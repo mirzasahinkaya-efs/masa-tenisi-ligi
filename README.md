@@ -21,7 +21,7 @@ never contradict a displayed table.
 ## Commands
 
     npm test         # run the league logic tests
-    npm run generate # regenerate data/league.json from scripts/roster.js
+    npm run generate # regenerate data/league.json via scripts/generate-season.js
 
 Regenerating discards recorded results. Only do it before the season starts.
 
