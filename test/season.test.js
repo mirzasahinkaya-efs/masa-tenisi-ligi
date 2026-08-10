@@ -2,6 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { ROSTER } from '../scripts/roster.js';
+import { parseScore } from '../lib/validate.js';
 
 const league = JSON.parse(
   await readFile(new URL('../data/league.json', import.meta.url), 'utf8'),
@@ -68,10 +69,24 @@ test('ten rounds run Monday to Friday from the season start', () => {
   assert.equal(league.rounds[9].deadline, '2026-10-16');
 });
 
-test('the season starts with no results and an unlocked draw', () => {
-  assert.deepEqual(league.results, []);
-  assert.equal(league.season.drawLocked, false);
+test('the committed draw seed is the season seed', () => {
   assert.equal(league.season.drawSeed, 20260810);
+});
+
+test('every result names a known fixture exactly once with a legal score', () => {
+  const known = new Set([...league.fixtures, ...league.playoffFixtures].map((f) => f.id));
+  const seen = new Set();
+
+  for (const result of league.results) {
+    assert.ok(known.has(result.fixtureId), `unknown fixture: ${result.fixtureId}`);
+    assert.equal(seen.has(result.fixtureId), false, `duplicate result: ${result.fixtureId}`);
+    seen.add(result.fixtureId);
+
+    const parsed = parseScore(`${result.p1Games}-${result.p2Games}`);
+    assert.equal(parsed.ok, true, `illegal score for ${result.fixtureId}`);
+  }
+
+  assert.ok(league.results.length <= known.size, 'more results than fixtures');
 });
 
 test('no derived standings are stored anywhere in the file', () => {
