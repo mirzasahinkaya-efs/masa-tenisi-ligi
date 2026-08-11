@@ -42,11 +42,28 @@ test('a token still valid one second before expiry is accepted', async () => {
 });
 
 test('garbage input is rejected without throwing', async () => {
-  for (const bad of ['', 'nope', 'a.b.c', 'not-base64.also-not', undefined, null]) {
+  for (const bad of ['', 'nope', 'a.b.c', undefined, null]) {
     const result = await verifyToken(bad, SECRET, { nowSeconds: NOW });
     assert.equal(result.ok, false, String(bad));
     assert.ok(['MALFORMED', 'BAD_SIGNATURE'].includes(result.error), `${bad} -> ${result.error}`);
   }
+});
+
+test('a well-formed but unsigned token fails on the signature, not the parse', async () => {
+  // Pins the verify-before-parse ordering. 'not-base64' decodes as valid
+  // base64, so a parse-first implementation would report MALFORMED here.
+  // Only a verify-first implementation reaches BAD_SIGNATURE.
+  const result = await verifyToken('not-base64.also-not', SECRET, { nowSeconds: NOW });
+  assert.deepEqual(result, { ok: false, error: 'BAD_SIGNATURE' });
+});
+
+test('a payload with Turkish characters round-trips intact', async () => {
+  const payload = { sub: 'U0AT8HQ7C9K', short: 'Tuğberk G.', note: 'Şahinkaya çğıöşü' };
+  const token = await signToken(payload, SECRET, { expiresInSeconds: 60, nowSeconds: NOW });
+  const result = await verifyToken(token, SECRET, { nowSeconds: NOW });
+  assert.equal(result.ok, true);
+  assert.equal(result.payload.short, 'Tuğberk G.');
+  assert.equal(result.payload.note, 'Şahinkaya çğıöşü');
 });
 
 test('the signature is not a plain hash of the payload', async () => {
