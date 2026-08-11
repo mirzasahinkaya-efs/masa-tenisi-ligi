@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "test": "node --test 'test/**/*.test.js'",
-    "generate": "node scripts/generate-season.js"
+    "generate": "node scripts/generate-season.js",
+    "score": "node scripts/record-score.js"
   }
 }
