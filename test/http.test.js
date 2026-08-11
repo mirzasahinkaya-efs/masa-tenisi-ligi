@@ -36,8 +36,12 @@ test('the session cookie carries every hardening flag', () => {
   }
 });
 
-test('clearing the cookie expires it immediately', () => {
+test('clearing the cookie expires it and matches the cookie it must overwrite', () => {
   const header = clearedCookie();
-  assert.ok(header.includes('Max-Age=0'), header);
-  assert.ok(header.includes('HttpOnly'), header);
+  assert.ok(header.startsWith(`${SESSION_COOKIE}=;`), header);
+  // Path must match what sessionCookie set, or the browser will not overwrite
+  // the live cookie and logout silently leaves the session intact.
+  for (const flag of ['HttpOnly', 'Secure', 'SameSite=Lax', 'Path=/', 'Max-Age=0']) {
+    assert.ok(header.includes(flag), `${flag} missing from: ${header}`);
+  }
 });

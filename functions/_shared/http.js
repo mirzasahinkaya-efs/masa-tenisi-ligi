@@ -19,6 +19,10 @@ export function readCookie(request, name) {
 }
 
 export function sessionCookie(value, { maxAgeSeconds }) {
+  // `value` is interpolated unescaped. Safe because its only producer is
+  // signToken(), whose output alphabet is base64url plus '.', so it can never
+  // contain ';', ',' or a newline that would inject an attribute or split the
+  // header. Any new caller must preserve that invariant.
   return `${SESSION_COOKIE}=${value}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=${maxAgeSeconds}`;
 }
 
