@@ -101,3 +101,25 @@ test('someone signed in but not on the roster cannot report', () => {
     { ok: false, error: 'NOT_A_PLAYER' },
   );
 });
+
+test('a participant who is p2 may report their own fixture', () => {
+  const fixture = { id: 'A-R1-M1', p1: 'tolga', p2: 'defne' };
+  assert.deepEqual(canReport(league, 'U0AFYKZMJEN', fixture), { ok: true, playerId: 'defne' });
+});
+
+test('an absent identity is never matched to a player', () => {
+  const withUnlinked = {
+    ...league,
+    players: [...league.players, { id: 'unlinked', short: 'Unlinked' }],
+  };
+  assert.equal(playerForSlackId(withUnlinked, undefined), null);
+  assert.equal(playerForSlackId(withUnlinked, null), null);
+  assert.equal(playerForSlackId(withUnlinked, ''), null);
+  const fixture = { id: 'A-R1-M1', p1: 'unlinked', p2: 'defne' };
+  assert.deepEqual(canReport(withUnlinked, undefined, fixture), { ok: false, error: 'NOT_A_PLAYER' });
+});
+
+test('a missing policy refuses rather than throwing', () => {
+  assert.deepEqual(checkIdentity({ teamId: 'T0EFSORA', email: 'a@efsora.com' }), { ok: false, error: 'MISSING' });
+  assert.deepEqual(checkIdentity({ teamId: 'T0EFSORA', email: 'a@efsora.com' }, {}), { ok: false, error: 'MISSING' });
+});
