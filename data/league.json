@@ -58,6 +58,13 @@
       "status": "provisional"
     },
     {
+      "id": "necmettin",
+      "name": "Necmettin Ç.",
+      "short": "Necmettin Ç.",
+      "slackId": "U0AN3LWT6H3",
+      "status": "provisional"
+    },
+    {
       "id": "omer",
       "name": "Ömer D.",
       "short": "Ömer D.",
@@ -91,30 +98,23 @@
       "short": "Tuğberk G.",
       "slackId": "U0BEE57LQ90",
       "status": "provisional"
-    },
-    {
-      "id": "can",
-      "name": "Can K.",
-      "short": "Can K.",
-      "slackId": "U0BJ863HCNP",
-      "status": "provisional"
     }
   ],
   "groups": {
     "A": [
       "aytac",
-      "can",
-      "dogukan",
-      "emre-k",
-      "emre-y",
+      "defne",
+      "emre-b",
+      "necmettin",
+      "tolga",
       "tugberk"
     ],
     "B": [
-      "defne",
-      "emre-b",
+      "dogukan",
+      "emre-k",
+      "emre-y",
       "mirza",
-      "omer",
-      "tolga"
+      "omer"
     ]
   },
   "rounds": [
@@ -183,16 +183,16 @@
       "stage": "group",
       "group": "A",
       "round": 1,
-      "p1": "can",
-      "p2": "emre-y"
+      "p1": "defne",
+      "p2": "tolga"
     },
     {
       "id": "A-R1-M3",
       "stage": "group",
       "group": "A",
       "round": 1,
-      "p1": "dogukan",
-      "p2": "emre-k"
+      "p1": "emre-b",
+      "p2": "necmettin"
     },
     {
       "id": "A-R2-M1",
@@ -200,7 +200,7 @@
       "group": "A",
       "round": 2,
       "p1": "aytac",
-      "p2": "emre-y"
+      "p2": "tolga"
     },
     {
       "id": "A-R2-M2",
@@ -208,15 +208,15 @@
       "group": "A",
       "round": 2,
       "p1": "tugberk",
-      "p2": "emre-k"
+      "p2": "necmettin"
     },
     {
       "id": "A-R2-M3",
       "stage": "group",
       "group": "A",
       "round": 2,
-      "p1": "can",
-      "p2": "dogukan"
+      "p1": "defne",
+      "p2": "emre-b"
     },
     {
       "id": "A-R3-M1",
@@ -224,15 +224,15 @@
       "group": "A",
       "round": 3,
       "p1": "aytac",
-      "p2": "emre-k"
+      "p2": "necmettin"
     },
     {
       "id": "A-R3-M2",
       "stage": "group",
       "group": "A",
       "round": 3,
-      "p1": "emre-y",
-      "p2": "dogukan"
+      "p1": "tolga",
+      "p2": "emre-b"
     },
     {
       "id": "A-R3-M3",
@@ -240,7 +240,7 @@
       "group": "A",
       "round": 3,
       "p1": "tugberk",
-      "p2": "can"
+      "p2": "defne"
     },
     {
       "id": "A-R4-M1",
@@ -248,22 +248,22 @@
       "group": "A",
       "round": 4,
       "p1": "aytac",
-      "p2": "dogukan"
+      "p2": "emre-b"
     },
     {
       "id": "A-R4-M2",
       "stage": "group",
       "group": "A",
       "round": 4,
-      "p1": "emre-k",
-      "p2": "can"
+      "p1": "necmettin",
+      "p2": "defne"
     },
     {
       "id": "A-R4-M3",
       "stage": "group",
       "group": "A",
       "round": 4,
-      "p1": "emre-y",
+      "p1": "tolga",
       "p2": "tugberk"
     },
     {
@@ -272,14 +272,14 @@
       "group": "A",
       "round": 5,
       "p1": "aytac",
-      "p2": "can"
+      "p2": "defne"
     },
     {
       "id": "A-R5-M2",
       "stage": "group",
       "group": "A",
       "round": 5,
-      "p1": "dogukan",
+      "p1": "emre-b",
       "p2": "tugberk"
     },
     {
@@ -287,8 +287,8 @@
       "stage": "group",
       "group": "A",
       "round": 5,
-      "p1": "emre-k",
-      "p2": "emre-y"
+      "p1": "necmettin",
+      "p2": "tolga"
     },
     {
       "id": "A-R6-M1",
@@ -303,23 +303,23 @@
       "stage": "group",
       "group": "A",
       "round": 6,
-      "p1": "emre-y",
-      "p2": "can"
+      "p1": "tolga",
+      "p2": "defne"
     },
     {
       "id": "A-R6-M3",
       "stage": "group",
       "group": "A",
       "round": 6,
-      "p1": "emre-k",
-      "p2": "dogukan"
+      "p1": "necmettin",
+      "p2": "emre-b"
     },
     {
       "id": "A-R7-M1",
       "stage": "group",
       "group": "A",
       "round": 7,
-      "p1": "emre-y",
+      "p1": "tolga",
       "p2": "aytac"
     },
     {
@@ -327,7 +327,7 @@
       "stage": "group",
       "group": "A",
       "round": 7,
-      "p1": "emre-k",
+      "p1": "necmettin",
       "p2": "tugberk"
     },
     {
@@ -335,15 +335,15 @@
       "stage": "group",
       "group": "A",
       "round": 7,
-      "p1": "dogukan",
-      "p2": "can"
+      "p1": "emre-b",
+      "p2": "defne"
     },
     {
       "id": "A-R8-M1",
       "stage": "group",
       "group": "A",
       "round": 8,
-      "p1": "emre-k",
+      "p1": "necmettin",
       "p2": "aytac"
     },
     {
@@ -351,15 +351,15 @@
       "stage": "group",
       "group": "A",
       "round": 8,
-      "p1": "dogukan",
-      "p2": "emre-y"
+      "p1": "emre-b",
+      "p2": "tolga"
     },
     {
       "id": "A-R8-M3",
       "stage": "group",
       "group": "A",
       "round": 8,
-      "p1": "can",
+      "p1": "defne",
       "p2": "tugberk"
     },
     {
@@ -367,7 +367,7 @@
       "stage": "group",
       "group": "A",
       "round": 9,
-      "p1": "dogukan",
+      "p1": "emre-b",
       "p2": "aytac"
     },
     {
@@ -375,8 +375,8 @@
       "stage": "group",
       "group": "A",
       "round": 9,
-      "p1": "can",
-      "p2": "emre-k"
+      "p1": "defne",
+      "p2": "necmettin"
     },
     {
       "id": "A-R9-M3",
@@ -384,14 +384,14 @@
       "group": "A",
       "round": 9,
       "p1": "tugberk",
-      "p2": "emre-y"
+      "p2": "tolga"
     },
     {
       "id": "A-R10-M1",
       "stage": "group",
       "group": "A",
       "round": 10,
-      "p1": "can",
+      "p1": "defne",
       "p2": "aytac"
     },
     {
@@ -400,175 +400,175 @@
       "group": "A",
       "round": 10,
       "p1": "tugberk",
-      "p2": "dogukan"
+      "p2": "emre-b"
     },
     {
       "id": "A-R10-M3",
       "stage": "group",
       "group": "A",
       "round": 10,
-      "p1": "emre-y",
-      "p2": "emre-k"
+      "p1": "tolga",
+      "p2": "necmettin"
     },
     {
       "id": "B-R1-M1",
       "stage": "group",
       "group": "B",
       "round": 1,
-      "p1": "emre-b",
-      "p2": "tolga"
+      "p1": "emre-k",
+      "p2": "omer"
     },
     {
       "id": "B-R1-M2",
       "stage": "group",
       "group": "B",
       "round": 1,
-      "p1": "mirza",
-      "p2": "omer"
+      "p1": "emre-y",
+      "p2": "mirza"
     },
     {
       "id": "B-R2-M1",
       "stage": "group",
       "group": "B",
       "round": 2,
-      "p1": "defne",
-      "p2": "tolga"
+      "p1": "dogukan",
+      "p2": "omer"
     },
     {
       "id": "B-R2-M2",
       "stage": "group",
       "group": "B",
       "round": 2,
-      "p1": "emre-b",
-      "p2": "mirza"
+      "p1": "emre-k",
+      "p2": "emre-y"
     },
     {
       "id": "B-R3-M1",
       "stage": "group",
       "group": "B",
       "round": 3,
-      "p1": "defne",
-      "p2": "omer"
+      "p1": "dogukan",
+      "p2": "mirza"
     },
     {
       "id": "B-R3-M2",
       "stage": "group",
       "group": "B",
       "round": 3,
-      "p1": "tolga",
-      "p2": "mirza"
+      "p1": "omer",
+      "p2": "emre-y"
     },
     {
       "id": "B-R4-M1",
       "stage": "group",
       "group": "B",
       "round": 4,
-      "p1": "defne",
-      "p2": "mirza"
+      "p1": "dogukan",
+      "p2": "emre-y"
     },
     {
       "id": "B-R4-M2",
       "stage": "group",
       "group": "B",
       "round": 4,
-      "p1": "omer",
-      "p2": "emre-b"
+      "p1": "mirza",
+      "p2": "emre-k"
     },
     {
       "id": "B-R5-M1",
       "stage": "group",
       "group": "B",
       "round": 5,
-      "p1": "defne",
-      "p2": "emre-b"
+      "p1": "dogukan",
+      "p2": "emre-k"
     },
     {
       "id": "B-R5-M2",
       "stage": "group",
       "group": "B",
       "round": 5,
-      "p1": "omer",
-      "p2": "tolga"
+      "p1": "mirza",
+      "p2": "omer"
     },
     {
       "id": "B-R6-M1",
       "stage": "group",
       "group": "B",
       "round": 6,
-      "p1": "tolga",
-      "p2": "emre-b"
+      "p1": "omer",
+      "p2": "emre-k"
     },
     {
       "id": "B-R6-M2",
       "stage": "group",
       "group": "B",
       "round": 6,
-      "p1": "omer",
-      "p2": "mirza"
+      "p1": "mirza",
+      "p2": "emre-y"
     },
     {
       "id": "B-R7-M1",
       "stage": "group",
       "group": "B",
       "round": 7,
-      "p1": "tolga",
-      "p2": "defne"
+      "p1": "omer",
+      "p2": "dogukan"
     },
     {
       "id": "B-R7-M2",
       "stage": "group",
       "group": "B",
       "round": 7,
-      "p1": "mirza",
-      "p2": "emre-b"
+      "p1": "emre-y",
+      "p2": "emre-k"
     },
     {
       "id": "B-R8-M1",
       "stage": "group",
       "group": "B",
       "round": 8,
-      "p1": "omer",
-      "p2": "defne"
+      "p1": "mirza",
+      "p2": "dogukan"
     },
     {
       "id": "B-R8-M2",
       "stage": "group",
       "group": "B",
       "round": 8,
-      "p1": "mirza",
-      "p2": "tolga"
+      "p1": "emre-y",
+      "p2": "omer"
     },
     {
       "id": "B-R9-M1",
       "stage": "group",
       "group": "B",
       "round": 9,
-      "p1": "mirza",
-      "p2": "defne"
+      "p1": "emre-y",
+      "p2": "dogukan"
     },
     {
       "id": "B-R9-M2",
       "stage": "group",
       "group": "B",
       "round": 9,
-      "p1": "emre-b",
-      "p2": "omer"
+      "p1": "emre-k",
+      "p2": "mirza"
     },
     {
       "id": "B-R10-M1",
       "stage": "group",
       "group": "B",
       "round": 10,
-      "p1": "emre-b",
-      "p2": "defne"
+      "p1": "emre-k",
+      "p2": "dogukan"
     },
     {
       "id": "B-R10-M2",
       "stage": "group",
       "group": "B",
       "round": 10,
-      "p1": "tolga",
-      "p2": "omer"
+      "p1": "omer",
+      "p2": "mirza"
     }
   ],
   "playoffFixtures": [

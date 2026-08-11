@@ -4,12 +4,14 @@ export const ROSTER = [
   { id: 'tolga', name: 'Tolga E.', short: 'Tolga E.', slackId: 'U09LQ3PF6LC' },
   { id: 'emre-k', name: 'Emre K.', short: 'Emre K.', slackId: 'U0A68UYA1NX' },
   { id: 'defne', name: 'Defne G.', short: 'Defne G.', slackId: 'U0AFYKZMJEN' },
+  // Surname initial taken from the username (necmettin.colakoglu); his Slack
+  // profile carries a first name only.
+  { id: 'necmettin', name: 'Necmettin Ç.', short: 'Necmettin Ç.', slackId: 'U0AN3LWT6H3' },
   { id: 'omer', name: 'Ömer D.', short: 'Ömer D.', slackId: 'U0APG48TL67' },
   { id: 'mirza', name: 'Mirza Ş.', short: 'Mirza Ş.', slackId: 'U0AT8HQ7C9K' },
   { id: 'dogukan', name: 'Doğukan D.', short: 'Doğukan D.', slackId: 'U0B3Q4A63DL' },
   { id: 'emre-b', name: 'Emre B.', short: 'Emre B.', slackId: 'U0BE7QDL98B' },
   { id: 'tugberk', name: 'Tuğberk G.', short: 'Tuğberk G.', slackId: 'U0BEE57LQ90' },
-  { id: 'can', name: 'Can K.', short: 'Can K.', slackId: 'U0BJ863HCNP' },
 ];
 
 export const SEASON = {

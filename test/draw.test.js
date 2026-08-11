@@ -59,3 +59,11 @@ test('shuffling does not mutate its input', () => {
   seededShuffle(input, 7);
   assert.deepEqual(input, ELEVEN);
 });
+
+test('the draw does not depend on the order the ids are passed in', () => {
+  const forward = drawGroups(ELEVEN, 20260810);
+  const reversed = drawGroups([...ELEVEN].reverse(), 20260810);
+  const rotated = drawGroups([...ELEVEN.slice(3), ...ELEVEN.slice(0, 3)], 20260810);
+  assert.deepEqual(forward, reversed);
+  assert.deepEqual(forward, rotated);
+});
