@@ -11,15 +11,31 @@
 </head>
 <body>
 <header class="masthead">
-  <div class="masthead__title">
-    <span class="eyebrow">Efsora</span>
-    <h1>Table Tennis League</h1>
+  <div class="masthead__row">
+    <div class="masthead__title">
+      <span class="eyebrow">Efsora</span>
+      <h1>Table Tennis League</h1>
+    </div>
+    <p class="progress" id="progress"></p>
   </div>
-  <p class="progress" id="progress"></p>
+  <!-- One tick per match, in playing order. Fills as results land. -->
+  <div class="season-strip" id="season-strip" aria-hidden="true"></div>
 </header>
 
+<nav class="sectionnav" aria-label="Jump to section">
+  <a href="#standings">Standings</a>
+  <a href="#round">This round</a>
+  <a href="#playoffs">Playoffs</a>
+  <a href="#fixtures">All fixtures</a>
+</nav>
+
+<noscript>
+  <p class="noscript">This page builds the tables in your browser, so it needs
+  JavaScript enabled. The raw season data is in <code>data/league.json</code>.</p>
+</noscript>
+
 <main>
-  <section class="panel">
+  <section class="panel" id="standings">
     <h2>Standings</h2>
     <div class="groups">
       <div class="group">
@@ -34,18 +50,18 @@
     <p class="footnote">Top two in each group advance. Win 3 pts, loss 0. Best of 5 games to 11.</p>
   </section>
 
-  <section class="panel">
+  <section class="panel panel--action" id="round">
     <h2 id="round-title">Round</h2>
     <p class="deadline" id="round-deadline"></p>
     <ul class="fixtures" id="round-fixtures"></ul>
   </section>
 
-  <section class="panel">
+  <section class="panel" id="playoffs">
     <h2>Playoffs</h2>
     <div class="bracket" id="bracket"></div>
   </section>
 
-  <section class="panel">
+  <section class="panel" id="fixtures">
     <h2>All fixtures</h2>
     <div id="all-fixtures"></div>
   </section>

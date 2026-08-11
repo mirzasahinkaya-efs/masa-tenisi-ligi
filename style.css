@@ -36,11 +36,53 @@ body {
 
 h1, h2, h3 { font-family: 'Montserrat', sans-serif; margin: 0; }
 
-.masthead {
+html { scroll-behavior: smooth; }
+
+:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+
+.masthead { padding: 40px 24px 18px; border-bottom: 1px solid var(--border-strong); }
+.masthead__row {
   display: flex; flex-wrap: wrap; gap: 16px;
   align-items: flex-end; justify-content: space-between;
-  padding: 40px 24px 24px;
+  margin-bottom: 18px;
+}
+
+/*
+ * Season strip: one tick per match, in playing order, filling as results are
+ * recorded. 54 is this league's own number, so the strip is a record of this
+ * season rather than a generic progress bar. Decorative — the adjacent
+ * "n/54 matches played" text carries the same information for screen readers.
+ */
+.season-strip { display: flex; gap: 2px; }
+.season-strip .tick {
+  flex: 1 1 0; min-width: 1px; height: 6px;
+  background: rgba(255, 255, 255, .1);
+}
+.season-strip .tick--played { background: var(--green); }
+
+.sectionnav {
+  position: sticky; top: 0; z-index: 10;
+  display: flex; overflow-x: auto;
+  padding: 0 24px;
+  background: var(--bg);
   border-bottom: 1px solid var(--border-strong);
+}
+.sectionnav a {
+  flex: 0 0 auto; padding: 13px 14px;
+  font: 600 11px 'Montserrat', sans-serif;
+  letter-spacing: .14em; text-transform: uppercase;
+  color: var(--muted); text-decoration: none; white-space: nowrap;
+  border-bottom: 2px solid transparent;
+  transition: color .15s ease, border-color .15s ease;
+}
+.sectionnav a:first-child { padding-left: 0; }
+.sectionnav a:hover { color: var(--text-strong); }
+.sectionnav a[aria-current="true"] { color: var(--blue); border-bottom-color: var(--blue); }
+
+.noscript {
+  margin: 0; padding: 16px 24px;
+  background: var(--surface-1); border-bottom: 1px solid var(--border);
+  color: var(--muted); font-size: 14px;
 }
 .eyebrow {
   display: block; margin-bottom: 6px;
@@ -51,8 +93,12 @@ h1, h2, h3 { font-family: 'Montserrat', sans-serif; margin: 0; }
 .progress { margin: 0; font: 500 13px 'DM Mono', monospace; color: var(--muted); }
 
 main { max-width: 1080px; margin: 0 auto; padding: 24px; display: grid; gap: 24px; }
+/* Clear the sticky nav when an anchor link lands on a section. */
+main > section { scroll-margin-top: 56px; }
 
 .panel { background: var(--surface-1); border: 1px solid var(--border); padding: 20px; }
+/* The round panel is the only one that asks the reader to do something. */
+.panel--action { box-shadow: inset 3px 0 0 var(--blue-mid); }
 .panel > h2 {
   font-size: 13px; font-weight: 700; letter-spacing: .16em;
   text-transform: uppercase; color: var(--label); margin-bottom: 16px;
@@ -84,6 +130,8 @@ main { max-width: 1080px; margin: 0 auto; padding: 24px; display: grid; gap: 24p
   font-weight: 500; color: var(--text-strong); width: 99%;
 }
 .table tbody tr.qualifying { background: var(--surface-2); box-shadow: inset 3px 0 0 var(--green); }
+/* Applied to the cells, so it layers over a qualifying row instead of fighting it. */
+.table tbody tr:hover td { background: rgba(255, 255, 255, .04); }
 .table .pts { color: var(--text-strong); font-weight: 500; }
 
 .footnote, .deadline { font-size: 12px; color: var(--muted); margin: 14px 0 0; }
@@ -131,6 +179,14 @@ main { max-width: 1080px; margin: 0 auto; padding: 24px; display: grid; gap: 24p
 
 @media (max-width: 720px) {
   .groups, .bracket { grid-template-columns: 1fr; }
-  .masthead { padding: 28px 16px 20px; }
+  .masthead { padding: 28px 16px 16px; }
+  .sectionnav { padding: 0 16px; }
+  .season-strip { gap: 1px; }
+  .season-strip .tick { height: 4px; }
   main { padding: 16px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { transition: none !important; }
 }

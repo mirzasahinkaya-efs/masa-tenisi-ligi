@@ -41,6 +41,52 @@ function renderProgress() {
   document.getElementById('progress').textContent = `${played}/${known.size} matches played`;
 }
 
+/**
+ * One tick per match, in playing order. Playoff fixtures have no p1/p2 until
+ * their slots resolve, so those fall back to the slot label ("A1", "W-SF1").
+ */
+function renderSeasonStrip() {
+  const played = new Set(league.results.map((result) => result.fixtureId));
+
+  document.getElementById('season-strip').innerHTML = allFixtures.map((fixture) => {
+    const home = nameOf.get(fixture.p1) ?? fixture.slotP1;
+    const away = nameOf.get(fixture.p2) ?? fixture.slotP2;
+    const result = resultFor.get(fixture.id);
+    const score = result ? ` · ${result.p1Games}-${result.p2Games}` : '';
+    const label = `${fixture.id} · ${home} v ${away}${score}`;
+    return `<span class="tick${played.has(fixture.id) ? ' tick--played' : ''}" title="${esc(label)}"></span>`;
+  }).join('');
+}
+
+/** Highlights the nav link for whichever section is currently in view. */
+function wireSectionNav() {
+  const links = new Map(
+    [...document.querySelectorAll('.sectionnav a')].map((link) => [link.hash.slice(1), link]),
+  );
+  const sections = [...links.keys()]
+    .map((id) => document.getElementById(id))
+    .filter(Boolean);
+
+  if (!sections.length || typeof IntersectionObserver !== 'function') return;
+
+  const setCurrent = (id) => {
+    for (const [key, link] of links) {
+      if (key === id) link.setAttribute('aria-current', 'true');
+      else link.removeAttribute('aria-current');
+    }
+  };
+
+  const observer = new IntersectionObserver((entries) => {
+    const inView = entries
+      .filter((entry) => entry.isIntersecting)
+      .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
+    if (inView.length) setCurrent(inView[0].target.id);
+  }, { rootMargin: '-56px 0px -55% 0px' });
+
+  for (const section of sections) observer.observe(section);
+  setCurrent(sections[0].id);
+}
+
 function renderTable(elementId, rows) {
   const started = rows.some((row) => row.played > 0);
 
@@ -145,8 +191,10 @@ function renderAllFixtures() {
 }
 
 renderProgress();
+renderSeasonStrip();
 renderTable('group-a', tables.A);
 renderTable('group-b', tables.B);
 renderCurrentRound();
 renderBracket();
 renderAllFixtures();
+wireSectionNav();
