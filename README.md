@@ -31,6 +31,48 @@ Regenerating refuses to run once results are recorded or the draw is locked.
 Pass `--force` only if you really mean to discard the season — a regenerated
 draw also produces different fixture ids, so old results cannot be pasted back.
 
+## Recording a result
+
+Two ways to record a result, and they write to the same place (`data/league.json`):
+
+- **On the site.** Sign in with Slack, then use the Record panel to submit a
+  result for one of your own unplayed fixtures. The web form is self-service —
+  it only lets you report matches you played in.
+- **From a checkout.**
+
+      npm run score -- <playerA> <playerB> <aGames>-<bGames>
+
+  The score is always from `playerA`'s point of view, e.g. `npm run score --
+  cem tolga 3-1` records Cem winning 3 games to 1. Add `--fix` to overwrite
+  when both meetings between the two players are already recorded (add
+  `--dry-run` to preview either case without writing).
+
+Admin corrections — fixing a result after the fact — go through the CLI with
+`--fix`, not the web form. The web form has no path for correcting someone
+else's match or a match you've already reported; that is intentional, since a
+correction needs a human to notice the discrepancy rather than a second
+self-service submission.
+
+## Deployment
+
+The site is currently served by GitHub Pages via
+`.github/workflows/pages.yml`, which builds and deploys on every push to
+`main`. A move to Cloudflare Pages is planned so that the static site and the
+`/api/*` Functions share one origin — that's what lets the session use an
+`HttpOnly` cookie instead of a token exposed to JavaScript.
+
+The Slack sign-in and result-submission API (`functions/api/`) is **built and
+tested but not deployed**. Cutover needs, in addition to hosting itself:
+
+- a Cloudflare account and Pages project connected to this repository,
+- a Slack app registered in the Efsora workspace with Sign in with Slack
+  enabled, and
+- a fine-grained GitHub token scoped to this repository with `contents:
+  write`, so the API can commit results on the submitter's behalf.
+
+Until that happens, the live URL above is the only deployment, and the
+Record panel and Slack sign-in link will not work there.
+
 ## Local preview
 
     python3 -m http.server 8000
