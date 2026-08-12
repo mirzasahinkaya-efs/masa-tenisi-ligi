@@ -9,7 +9,7 @@ export async function handleResultPost(request, env, deps = {}) {
   const nowSeconds = (deps.nowSeconds ?? (() => Math.floor(Date.now() / 1000)))();
 
   const session = await verifyToken(
-    readCookie(request, SESSION_COOKIE), env.SESSION_SECRET, { nowSeconds },
+    readCookie(request, SESSION_COOKIE), env.SESSION_SECRET, { nowSeconds, expectType: 'session' },
   );
   if (!session.ok) return json({ error: 'Please sign in first.' }, { status: 401 });
 

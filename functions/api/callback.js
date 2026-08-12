@@ -56,7 +56,7 @@ export async function handleCallback(request, env, deps = {}) {
   const code = url.searchParams.get('code');
   const state = url.searchParams.get('state');
 
-  const stateCheck = await verifyToken(state, env.SESSION_SECRET, { nowSeconds });
+  const stateCheck = await verifyToken(state, env.SESSION_SECRET, { nowSeconds, expectType: 'login' });
   if (!code || !stateCheck.ok) {
     return json({ error: 'Sign-in could not be verified. Please start again.' }, { status: 403 });
   }
@@ -87,7 +87,7 @@ export async function handleCallback(request, env, deps = {}) {
     return json({ error: 'Only Efsora Slack accounts can sign in.' }, { status: 403 });
   }
 
-  const token = await signToken({ sub: claims.sub }, env.SESSION_SECRET, {
+  const token = await signToken({ t: 'session', sub: claims.sub }, env.SESSION_SECRET, {
     expiresInSeconds: SESSION_TTL_SECONDS, nowSeconds,
   });
   // Two Set-Cookie headers: a plain object literal cannot hold duplicate

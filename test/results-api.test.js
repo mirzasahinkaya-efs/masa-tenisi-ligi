@@ -9,7 +9,7 @@ const NOW = 1_786_000_000;
 const env = { SESSION_SECRET: 'session-secret', GITHUB_TOKEN: 't', GITHUB_REPO: 'o/r' };
 const base = JSON.parse(await readFile(new URL('../data/league.json', import.meta.url), 'utf8'));
 
-const session = (slackId) => signToken({ sub: slackId }, env.SESSION_SECRET, {
+const session = (slackId) => signToken({ t: 'session', sub: slackId }, env.SESSION_SECRET, {
   expiresInSeconds: 3600, nowSeconds: NOW,
 });
 

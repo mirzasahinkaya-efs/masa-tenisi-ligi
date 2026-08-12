@@ -38,7 +38,7 @@ const callbackRequest = async (state, { cookie } = {}) => new Request(
   cookie ? { headers: { cookie } } : undefined,
 );
 
-const validState = () => signToken({ n: 'nonce' }, env.SESSION_SECRET, {
+const validState = () => signToken({ t: 'login', n: 'nonce' }, env.SESSION_SECRET, {
   expiresInSeconds: 600, nowSeconds: NOW,
 });
 
@@ -121,7 +121,7 @@ test('me reports a signed-out caller without touching the store', async () => {
 });
 
 test('me resolves a signed-in caller to their player', async () => {
-  const token = await signToken({ sub: 'U0AT8HQ7C9K' }, env.SESSION_SECRET, {
+  const token = await signToken({ t: 'session', sub: 'U0AT8HQ7C9K' }, env.SESSION_SECRET, {
     expiresInSeconds: 3600, nowSeconds: Math.floor(Date.now() / 1000),
   });
   const request = new Request('https://league.test/api/me', {
@@ -135,7 +135,7 @@ test('me resolves a signed-in caller to their player', async () => {
 });
 
 test('me reports the roster as unavailable rather than rejecting', async () => {
-  const token = await signToken({ sub: 'U0AT8HQ7C9K' }, env.SESSION_SECRET, {
+  const token = await signToken({ t: 'session', sub: 'U0AT8HQ7C9K' }, env.SESSION_SECRET, {
     expiresInSeconds: 3600, nowSeconds: Math.floor(Date.now() / 1000),
   });
   const request = new Request('https://league.test/api/me', {
@@ -158,7 +158,7 @@ test('logout clears the cookie and redirects home', async () => {
 });
 
 test('me reports a signed-in colleague who is not a player', async () => {
-  const token = await signToken({ sub: 'U0COLLEAGUE' }, env.SESSION_SECRET, {
+  const token = await signToken({ t: 'session', sub: 'U0COLLEAGUE' }, env.SESSION_SECRET, {
     expiresInSeconds: 3600, nowSeconds: Math.floor(Date.now() / 1000),
   });
   const request = new Request('https://league.test/api/me', {
@@ -172,7 +172,7 @@ test('me reports a signed-in colleague who is not a player', async () => {
 test('a callback state without its matching browser cookie is refused', async () => {
   // The login-CSRF case: a valid, correctly signed state captured from someone
   // else's sign-in, replayed in a browser that never visited /api/login.
-  const state = await signToken({ n: 'nonce-abc' }, env.SESSION_SECRET, {
+  const state = await signToken({ t: 'login', n: 'nonce-abc' }, env.SESSION_SECRET, {
     expiresInSeconds: 600, nowSeconds: NOW,
   });
   const request = new Request(`https://league.test/api/callback?code=abc&state=${encodeURIComponent(state)}`);
@@ -184,7 +184,7 @@ test('a callback state without its matching browser cookie is refused', async ()
 });
 
 test('a callback state with a mismatched browser cookie is refused', async () => {
-  const state = await signToken({ n: 'nonce-abc' }, env.SESSION_SECRET, {
+  const state = await signToken({ t: 'login', n: 'nonce-abc' }, env.SESSION_SECRET, {
     expiresInSeconds: 600, nowSeconds: NOW,
   });
   const request = new Request(`https://league.test/api/callback?code=abc&state=${encodeURIComponent(state)}`, {
@@ -195,4 +195,17 @@ test('a callback state with a mismatched browser cookie is refused', async () =>
   }));
   assert.equal(response.status, 403);
   assert.equal(response.headers.get('set-cookie'), null);
+});
+
+test('an OAuth state token cannot be used as a session cookie', async () => {
+  // The exact attack: mint a state at /api/login, present it as league_session.
+  const state = await signToken({ t: 'login', n: 'nonce' }, env.SESSION_SECRET, {
+    expiresInSeconds: 600, nowSeconds: Math.floor(Date.now() / 1000),
+  });
+  const request = new Request('https://league.test/api/me', {
+    headers: { cookie: `${SESSION_COOKIE}=${state}` },
+  });
+  const response = await handleMe(request, env, { makeStore: () => ({ read: async () => ({ league, sha: 's' }) }) });
+  assert.equal(response.status, 200);
+  assert.deepEqual(await response.json(), { signedIn: false, player: null });
 });

@@ -6,7 +6,7 @@ import { json, readCookie, SESSION_COOKIE } from '../_shared/http.js';
 export async function handleMe(request, env, deps = {}) {
   const token = readCookie(request, SESSION_COOKIE);
   const session = await verifyToken(token, env.SESSION_SECRET, {
-    nowSeconds: Math.floor(Date.now() / 1000),
+    nowSeconds: Math.floor(Date.now() / 1000), expectType: 'session',
   });
   if (!session.ok) return json({ signedIn: false, player: null });
 

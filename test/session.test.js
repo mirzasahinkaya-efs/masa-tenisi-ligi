@@ -75,3 +75,17 @@ test('the signature is not a plain hash of the payload', async () => {
   const hex = [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, '0')).join('');
   assert.notEqual(signature, hex);
 });
+
+test('a token of the wrong type is rejected', async () => {
+  const login = await signToken({ t: 'login', n: 'abc' }, SECRET, {
+    expiresInSeconds: 60, nowSeconds: NOW,
+  });
+  assert.deepEqual(
+    await verifyToken(login, SECRET, { nowSeconds: NOW, expectType: 'session' }),
+    { ok: false, error: 'WRONG_TYPE' },
+  );
+  const session = await signToken({ t: 'session', sub: 'U1' }, SECRET, {
+    expiresInSeconds: 60, nowSeconds: NOW,
+  });
+  assert.equal((await verifyToken(session, SECRET, { nowSeconds: NOW, expectType: 'session' })).ok, true);
+});
