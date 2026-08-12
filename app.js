@@ -87,7 +87,7 @@ function wireSectionNav() {
   setCurrent(sections[0].id);
 }
 
-function renderTable(elementId, rows) {
+function renderTable(elementId, rows, qualifyCount) {
   const started = rows.some((row) => row.played > 0);
 
   const head = `
@@ -96,7 +96,7 @@ function renderTable(elementId, rows) {
     </tr></thead>`;
 
   const body = rows.map((row) => `
-    <tr class="${started && row.position <= 2 ? 'qualifying' : ''}">
+    <tr class="${started && row.position <= qualifyCount ? 'qualifying' : ''}">
       <td>${started ? row.position : '–'}</td>
       <td title="${esc(fullNameOf.get(row.playerId))}">${esc(nameOf.get(row.playerId))}</td>
       <td>${row.played}</td>
@@ -205,8 +205,10 @@ function renderAllFixtures() {
 
 renderProgress();
 renderSeasonStrip();
-renderTable('group-a', tables.A);
-renderTable('group-b', tables.B);
+// Group A qualifies four and Group B three; the eighth bracket place is the
+// CEO, who plays no group stage.
+renderTable('group-a', tables.A, 4);
+renderTable('group-b', tables.B, 3);
 renderCurrentRound();
 renderBracket();
 renderAllFixtures();
