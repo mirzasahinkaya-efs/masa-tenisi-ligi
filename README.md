@@ -36,8 +36,10 @@ draw also produces different fixture ids, so old results cannot be pasted back.
 Two ways to record a result, and they write to the same place (`data/league.json`):
 
 - **On the site.** Sign in with Slack, then use the Record panel to submit a
-  result for one of your own unplayed fixtures. The web form is self-service —
-  it only lets you report matches you played in.
+  result for one of your own unplayed group fixtures. The web form is
+  self-service — it only lets you report matches you played in. Playoff
+  fixtures are cross-group, so they are not offered here; record those from a
+  checkout instead.
 - **From a checkout.**
 
       npm run score -- <playerA> <playerB> <aGames>-<bGames>
