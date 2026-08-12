@@ -206,6 +206,40 @@ test('a match recorded by someone else in the gap is refused, not double-recorde
   assert.equal(reads, 1);
 });
 
+test('under a race, the response names the fixture actually committed, not the stale one', async () => {
+  const league = structuredClone(base);
+  const pair = league.fixtures.filter((f) => [f.p1, f.p2].includes('mirza'));
+  const first = pair[0];
+  const opponentId = first.p1 === 'mirza' ? first.p2 : first.p1;
+  const both = league.fixtures.filter(
+    (f) => [f.p1, f.p2].sort().join() === ['mirza', opponentId].sort().join(),
+  );
+  const second = both.find((f) => f.id !== first.id);
+
+  let committedResult;
+  const store = {
+    read: async () => ({ league: structuredClone(league), sha: 's' }),
+    update: async (mutate) => {
+      // Between the pre-read (which sees `first` as open, same as the outer
+      // findOpenFixture call) and this mutation, someone else records `first`,
+      // so the fresh findOpenFixture inside the mutation resolves to `second`.
+      // The response must name `second`, not the `first` the pre-read saw.
+      const raced = structuredClone(league);
+      raced.results.push({ fixtureId: first.id, p1Games: 3, p2Games: 1, reportedBy: 'other', reportedAt: '2026-08-02T00:00:00Z' });
+      const next = mutate(raced);
+      committedResult = next.league.results.at(-1);
+      return { ok: true, league: next.league };
+    },
+  };
+
+  const request = await post({ opponentId, myGames: 3, theirGames: 2 }, slackOf('mirza'));
+  const response = await handleResultPost(request, env, { nowSeconds: () => NOW, makeStore: () => store });
+  assert.equal(response.status, 200);
+  const body = await response.json();
+  assert.equal(body.fixtureId, second.id);
+  assert.equal(committedResult.fixtureId, second.id);
+});
+
 test('a store read failure returns 502 rather than throwing', async () => {
   const failing = { read: async () => { throw Object.assign(new Error('boom'), { status: 401 }); } };
   const response = await handleResultPost(

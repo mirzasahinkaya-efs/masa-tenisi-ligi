@@ -1,6 +1,6 @@
 import { verifyToken } from '../../lib/session.js';
 import { canReport, playerForSlackId } from '../../lib/auth.js';
-import { findOpenFixture, orientResult } from '../../lib/report.js';
+import { findOpenFixture, orientResult, playableFixtures } from '../../lib/report.js';
 import { parseScore } from '../../lib/validate.js';
 import { createStore } from '../_shared/store.js';
 import { json, readCookie, SESSION_COOKIE } from '../_shared/http.js';
@@ -75,9 +75,21 @@ export async function handleResultPost(request, env, deps = {}) {
     return json({ error: 'You can only record your own matches.' }, { status: 403 });
   }
 
+  let committedFixtureId;
+  let committedRound;
+  let meetingIndex;
+
   const committed = await store.update((current) => {
     const fresh = findOpenFixture(current, reporter.id, body.opponentId);
     if (!fresh.ok) throw new Error('ALREADY_RECORDED');
+
+    const bothFixtureIds = playableFixtures(current)
+      .filter((f) => [f.p1, f.p2].sort().join() === [reporter.id, body.opponentId].sort().join())
+      .map((f) => f.id);
+
+    committedFixtureId = fresh.fixture.id;
+    committedRound = fresh.fixture.round;
+    meetingIndex = current.results.filter((r) => bothFixtureIds.includes(r.fixtureId)).length + 1;
 
     const oriented = orientResult(fresh.fixture, reporter.id, score.p1Games, score.p2Games);
     const results = [...current.results, {
@@ -96,7 +108,13 @@ export async function handleResultPost(request, env, deps = {}) {
     const status = committed.error === 'REJECTED' ? 409 : 502;
     return json({ error: 'Could not save the result. Please try again.' }, { status });
   }
-  return json({ ok: true, fixtureId: open.fixture.id });
+  return json({
+    ok: true,
+    fixtureId: committedFixtureId,
+    round: committedRound,
+    meeting: meetingIndex,
+    meetingsTotal: 2,
+  });
 }
 
 export const onRequestPost = ({ request, env }) => handleResultPost(request, env);
