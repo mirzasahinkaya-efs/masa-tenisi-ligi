@@ -17,6 +17,7 @@
       <h1>Table Tennis League</h1>
     </div>
     <p class="progress" id="progress"></p>
+    <div class="account" id="account"></div>
   </div>
   <!-- One tick per match, in playing order. Fills as results land. -->
   <div class="season-strip" id="season-strip" aria-hidden="true"></div>
@@ -25,6 +26,7 @@
 <nav class="sectionnav" aria-label="Jump to section">
   <a href="#standings">Standings</a>
   <a href="#round">This round</a>
+  <a href="#report">Record</a>
   <a href="#playoffs">Playoffs</a>
   <a href="#fixtures">All fixtures</a>
 </nav>
@@ -56,6 +58,20 @@
     <ul class="fixtures" id="round-fixtures"></ul>
   </section>
 
+  <section class="panel panel--action" id="report" hidden>
+    <h2>Record a result</h2>
+    <form class="report" id="report-form">
+      <label for="report-opponent">Opponent</label>
+      <select id="report-opponent" name="opponent" required></select>
+      <label for="report-mine">Your games</label>
+      <select id="report-mine" name="mine" required></select>
+      <label for="report-theirs">Their games</label>
+      <select id="report-theirs" name="theirs" required></select>
+      <button type="submit">Record result</button>
+    </form>
+    <p class="report__status" id="report-status" role="status"></p>
+  </section>
+
   <section class="panel" id="playoffs">
     <h2>Playoffs</h2>
     <div class="bracket" id="bracket"></div>
@@ -68,5 +84,6 @@
 </main>
 
 <script type="module" src="./app.js"></script>
+<script type="module" src="./signin.js"></script>
 </body>
 </html>
