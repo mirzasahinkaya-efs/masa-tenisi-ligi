@@ -29,3 +29,13 @@ export function sessionCookie(value, { maxAgeSeconds }) {
 export function clearedCookie() {
   return `${SESSION_COOKIE}=; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=0`;
 }
+
+export const LOGIN_STATE_COOKIE = 'login_state';
+
+export function loginStateCookie(value, { maxAgeSeconds }) {
+  return `${LOGIN_STATE_COOKIE}=${value}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=${maxAgeSeconds}`;
+}
+
+export function clearedLoginStateCookie() {
+  return `${LOGIN_STATE_COOKIE}=; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=0`;
+}

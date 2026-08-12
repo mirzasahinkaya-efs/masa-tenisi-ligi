@@ -1,6 +1,8 @@
 import { signToken, verifyToken } from '../../lib/session.js';
 import { checkIdentity } from '../../lib/auth.js';
-import { json, sessionCookie } from '../_shared/http.js';
+import {
+  json, readCookie, sessionCookie, LOGIN_STATE_COOKIE, clearedLoginStateCookie,
+} from '../_shared/http.js';
 
 const SESSION_TTL_SECONDS = 30 * 24 * 60 * 60;
 
@@ -59,6 +61,17 @@ export async function handleCallback(request, env, deps = {}) {
     return json({ error: 'Sign-in could not be verified. Please start again.' }, { status: 403 });
   }
 
+  // A signed, unexpired state alone does not prove this is the browser that
+  // began the sign-in: /api/login is public, so anyone can mint one. Binding
+  // it to a same-browser cookie stops a captured callback URL from being
+  // replayed in someone else's browser to steal their session as the
+  // original member's identity (login CSRF). Same message as the state
+  // check above, so a caller cannot tell which of the two failed.
+  const boundNonce = readCookie(request, LOGIN_STATE_COOKIE);
+  if (!boundNonce || boundNonce !== stateCheck.payload.n) {
+    return json({ error: 'Sign-in could not be verified. Please start again.' }, { status: 403 });
+  }
+
   const redirectUri = new URL('/api/callback', url.origin).toString();
   const exchange = await (deps.exchangeCode ?? exchangeCodeWithSlack)(env, code, redirectUri);
   if (!exchange.ok) return json({ error: 'Slack sign-in failed.' }, { status: 403 });
@@ -77,13 +90,12 @@ export async function handleCallback(request, env, deps = {}) {
   const token = await signToken({ sub: claims.sub }, env.SESSION_SECRET, {
     expiresInSeconds: SESSION_TTL_SECONDS, nowSeconds,
   });
-  return new Response(null, {
-    status: 302,
-    headers: {
-      location: '/',
-      'set-cookie': sessionCookie(token, { maxAgeSeconds: SESSION_TTL_SECONDS }),
-    },
-  });
+  // Two Set-Cookie headers: a plain object literal cannot hold duplicate
+  // keys, so Headers#append is required to send both.
+  const headers = new Headers({ location: '/' });
+  headers.append('set-cookie', sessionCookie(token, { maxAgeSeconds: SESSION_TTL_SECONDS }));
+  headers.append('set-cookie', clearedLoginStateCookie());
+  return new Response(null, { status: 302, headers });
 }
 
 export const onRequestGet = ({ request, env }) => handleCallback(request, env);

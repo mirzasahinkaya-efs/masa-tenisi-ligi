@@ -1,5 +1,6 @@
 import { signToken } from '../../lib/session.js';
 import { buildAuthorizeUrl } from './callback.js';
+import { loginStateCookie } from '../_shared/http.js';
 
 const STATE_TTL_SECONDS = 600;
 
@@ -13,5 +14,13 @@ export async function onRequestGet({ request, env }) {
     expiresInSeconds: STATE_TTL_SECONDS, nowSeconds,
   });
   const redirectUri = new URL('/api/callback', new URL(request.url).origin).toString();
-  return Response.redirect(buildAuthorizeUrl(env, state, redirectUri), 302);
+  return new Response(null, {
+    status: 302,
+    headers: {
+      location: buildAuthorizeUrl(env, state, redirectUri),
+      // Binds the state to THIS browser. A captured callback URL replayed in
+      // anyone else's browser has no matching cookie and is refused.
+      'set-cookie': loginStateCookie(nonce, { maxAgeSeconds: STATE_TTL_SECONDS }),
+    },
+  });
 }

@@ -33,8 +33,9 @@ const deps = (claims, { readLeague = async () => league } = {}) => ({
   exchangeCode: async () => ({ ok: true, idToken: idToken(claims) }),
 });
 
-const callbackRequest = async (state) => new Request(
+const callbackRequest = async (state, { cookie } = {}) => new Request(
   `https://league.test/api/callback?code=abc&state=${encodeURIComponent(state)}`,
+  cookie ? { headers: { cookie } } : undefined,
 );
 
 const validState = () => signToken({ n: 'nonce' }, env.SESSION_SECRET, {
@@ -54,7 +55,7 @@ test('the authorize url pins the workspace, scopes and state', () => {
 
 test('a valid callback sets an HttpOnly session cookie and redirects', async () => {
   const response = await handleCallback(
-    await callbackRequest(await validState()), env,
+    await callbackRequest(await validState(), { cookie: 'login_state=nonce' }), env,
     deps({ sub: 'U0AT8HQ7C9K', email: 'mirza.sahinkaya@efsora.com', 'https://slack.com/team_id': 'T0EFSORA' }),
   );
   assert.equal(response.status, 302);
@@ -94,7 +95,7 @@ test('an outside email domain is refused', async () => {
 test('a valid Efsora identity who is not a player still signs in', async () => {
   // They can browse; authorisation to submit is enforced separately.
   const response = await handleCallback(
-    await callbackRequest(await validState()), env,
+    await callbackRequest(await validState(), { cookie: 'login_state=nonce' }), env,
     deps({ sub: 'U0COLLEAGUE', email: 'someone@efsora.com', 'https://slack.com/team_id': 'T0EFSORA' }),
   );
   assert.equal(response.status, 302);
@@ -154,4 +155,44 @@ test('logout clears the cookie and redirects home', async () => {
   for (const flag of ['HttpOnly', 'Secure', 'SameSite=Lax', 'Path=/', 'Max-Age=0']) {
     assert.ok(cookie.includes(flag), `${flag} missing from: ${cookie}`);
   }
+});
+
+test('me reports a signed-in colleague who is not a player', async () => {
+  const token = await signToken({ sub: 'U0COLLEAGUE' }, env.SESSION_SECRET, {
+    expiresInSeconds: 3600, nowSeconds: Math.floor(Date.now() / 1000),
+  });
+  const request = new Request('https://league.test/api/me', {
+    headers: { cookie: `${SESSION_COOKIE}=${token}` },
+  });
+  const response = await handleMe(request, env, { makeStore: () => ({ read: async () => ({ league, sha: 's' }) }) });
+  assert.equal(response.status, 200);
+  assert.deepEqual(await response.json(), { signedIn: true, player: null });
+});
+
+test('a callback state without its matching browser cookie is refused', async () => {
+  // The login-CSRF case: a valid, correctly signed state captured from someone
+  // else's sign-in, replayed in a browser that never visited /api/login.
+  const state = await signToken({ n: 'nonce-abc' }, env.SESSION_SECRET, {
+    expiresInSeconds: 600, nowSeconds: NOW,
+  });
+  const request = new Request(`https://league.test/api/callback?code=abc&state=${encodeURIComponent(state)}`);
+  const response = await handleCallback(request, env, deps({
+    sub: 'U0ATTACKER', email: 'attacker@efsora.com', 'https://slack.com/team_id': 'T0EFSORA',
+  }));
+  assert.equal(response.status, 403);
+  assert.equal(response.headers.get('set-cookie'), null);
+});
+
+test('a callback state with a mismatched browser cookie is refused', async () => {
+  const state = await signToken({ n: 'nonce-abc' }, env.SESSION_SECRET, {
+    expiresInSeconds: 600, nowSeconds: NOW,
+  });
+  const request = new Request(`https://league.test/api/callback?code=abc&state=${encodeURIComponent(state)}`, {
+    headers: { cookie: 'login_state=a-different-nonce' },
+  });
+  const response = await handleCallback(request, env, deps({
+    sub: 'U0AT8HQ7C9K', email: 'a@efsora.com', 'https://slack.com/team_id': 'T0EFSORA',
+  }));
+  assert.equal(response.status, 403);
+  assert.equal(response.headers.get('set-cookie'), null);
 });
