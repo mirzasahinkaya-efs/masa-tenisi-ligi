@@ -4,7 +4,7 @@ import { buildAuthorizeUrl, handleCallback } from '../functions/api/callback.js'
 import { handleMe, onRequestGet as me } from '../functions/api/me.js';
 import { onRequestGet as logout } from '../functions/api/logout.js';
 import { signToken } from '../lib/session.js';
-import { SESSION_COOKIE } from '../functions/_shared/http.js';
+import { SESSION_COOKIE, LOGIN_STATE_COOKIE } from '../functions/_shared/http.js';
 
 const NOW = 1_786_000_000;
 const env = {
@@ -55,7 +55,7 @@ test('the authorize url pins the workspace, scopes and state', () => {
 
 test('a valid callback sets an HttpOnly session cookie and redirects', async () => {
   const response = await handleCallback(
-    await callbackRequest(await validState(), { cookie: 'login_state=nonce' }), env,
+    await callbackRequest(await validState(), { cookie: `${LOGIN_STATE_COOKIE}=nonce` }), env,
     deps({ sub: 'U0AT8HQ7C9K', email: 'mirza.sahinkaya@efsora.com', 'https://slack.com/team_id': 'T0EFSORA' }),
   );
   assert.equal(response.status, 302);
@@ -77,7 +77,7 @@ test('a missing or unsigned state is refused', async () => {
 
 test('an identity from another workspace is refused even with an efsora address', async () => {
   const response = await handleCallback(
-    await callbackRequest(await validState(), { cookie: 'login_state=nonce' }), env,
+    await callbackRequest(await validState(), { cookie: `${LOGIN_STATE_COOKIE}=nonce` }), env,
     deps({ sub: 'U0X', email: 'someone@efsora.com', 'https://slack.com/team_id': 'T0SOMEWHERE' }),
   );
   assert.equal(response.status, 403);
@@ -86,7 +86,7 @@ test('an identity from another workspace is refused even with an efsora address'
 
 test('an outside email domain is refused', async () => {
   const response = await handleCallback(
-    await callbackRequest(await validState(), { cookie: 'login_state=nonce' }), env,
+    await callbackRequest(await validState(), { cookie: `${LOGIN_STATE_COOKIE}=nonce` }), env,
     deps({ sub: 'U0X', email: 'someone@gmail.com', 'https://slack.com/team_id': 'T0EFSORA' }),
   );
   assert.equal(response.status, 403);
@@ -95,7 +95,7 @@ test('an outside email domain is refused', async () => {
 test('a valid Efsora identity who is not a player still signs in', async () => {
   // They can browse; authorisation to submit is enforced separately.
   const response = await handleCallback(
-    await callbackRequest(await validState(), { cookie: 'login_state=nonce' }), env,
+    await callbackRequest(await validState(), { cookie: `${LOGIN_STATE_COOKIE}=nonce` }), env,
     deps({ sub: 'U0COLLEAGUE', email: 'someone@efsora.com', 'https://slack.com/team_id': 'T0EFSORA' }),
   );
   assert.equal(response.status, 302);
@@ -188,7 +188,7 @@ test('a callback state with a mismatched browser cookie is refused', async () =>
     expiresInSeconds: 600, nowSeconds: NOW,
   });
   const request = new Request(`https://league.test/api/callback?code=abc&state=${encodeURIComponent(state)}`, {
-    headers: { cookie: 'login_state=a-different-nonce' },
+    headers: { cookie: `${LOGIN_STATE_COOKIE}=a-different-nonce` },
   });
   const response = await handleCallback(request, env, deps({
     sub: 'U0AT8HQ7C9K', email: 'a@efsora.com', 'https://slack.com/team_id': 'T0EFSORA',

@@ -1,4 +1,7 @@
-export const SESSION_COOKIE = 'league_session';
+// The __Host- prefix makes the browser refuse the cookie unless it is Secure,
+// Path=/ and has no Domain — which means a sibling subdomain cannot set or
+// overwrite it. Both cookies already meet those conditions.
+export const SESSION_COOKIE = '__Host-league_session';
 
 export function json(data, { status = 200, headers = {} } = {}) {
   return new Response(JSON.stringify(data), {
@@ -30,7 +33,7 @@ export function clearedCookie() {
   return `${SESSION_COOKIE}=; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=0`;
 }
 
-export const LOGIN_STATE_COOKIE = 'login_state';
+export const LOGIN_STATE_COOKIE = '__Host-login_state';
 
 export function loginStateCookie(value, { maxAgeSeconds }) {
   return `${LOGIN_STATE_COOKIE}=${value}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=${maxAgeSeconds}`;

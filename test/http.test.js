@@ -16,7 +16,7 @@ test('json responses carry the status and content type', async () => {
 });
 
 test('a named cookie is read out of the header', () => {
-  assert.equal(readCookie(withCookies('a=1; league_session=abc; b=2'), SESSION_COOKIE), 'abc');
+  assert.equal(readCookie(withCookies(`a=1; ${SESSION_COOKIE}=abc; b=2`), SESSION_COOKIE), 'abc');
 });
 
 test('a missing cookie or header reads as null', () => {
@@ -25,12 +25,12 @@ test('a missing cookie or header reads as null', () => {
 });
 
 test('a cookie name that is a prefix of another is not confused for it', () => {
-  assert.equal(readCookie(withCookies('league_session_backup=nope'), SESSION_COOKIE), null);
+  assert.equal(readCookie(withCookies(`${SESSION_COOKIE}_backup=nope`), SESSION_COOKIE), null);
 });
 
 test('the session cookie carries every hardening flag', () => {
   const header = sessionCookie('token-value', { maxAgeSeconds: 3600 });
-  assert.match(header, /^league_session=token-value;/);
+  assert.match(header, new RegExp(`^${SESSION_COOKIE}=token-value;`));
   for (const flag of ['HttpOnly', 'Secure', 'SameSite=Lax', 'Path=/', 'Max-Age=3600']) {
     assert.ok(header.includes(flag), `${flag} missing from: ${header}`);
   }
