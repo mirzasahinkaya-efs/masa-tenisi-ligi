@@ -3,7 +3,8 @@ import assert from 'node:assert/strict';
 import { buildAuthorizeUrl, handleCallback } from '../functions/api/callback.js';
 import { handleMe, onRequestGet as me } from '../functions/api/me.js';
 import { onRequestGet as logout } from '../functions/api/logout.js';
-import { signToken } from '../lib/session.js';
+import { onRequestGet as login } from '../functions/api/login.js';
+import { signToken, verifyToken } from '../lib/session.js';
 import { SESSION_COOKIE, LOGIN_STATE_COOKIE } from '../functions/_shared/http.js';
 
 const NOW = 1_786_000_000;
@@ -208,4 +209,28 @@ test('an OAuth state token cannot be used as a session cookie', async () => {
   const response = await handleMe(request, env, { makeStore: () => ({ read: async () => ({ league, sha: 's' }) }) });
   assert.equal(response.status, 200);
   assert.deepEqual(await response.json(), { signedIn: false, player: null });
+});
+
+test('login issues a state whose nonce matches the cookie it sets', async () => {
+  const response = await login({ request: new Request('https://league.test/api/login'), env });
+  assert.equal(response.status, 302);
+
+  const location = new URL(response.headers.get('location'));
+  assert.equal(location.origin + location.pathname, 'https://slack.com/openid/connect/authorize');
+
+  const cookie = response.headers.get('set-cookie');
+  assert.ok(cookie.startsWith(`${LOGIN_STATE_COOKIE}=`), cookie);
+  for (const flag of ['HttpOnly', 'Secure', 'SameSite=Lax', 'Path=/']) {
+    assert.ok(cookie.includes(flag), `${flag} missing from: ${cookie}`);
+  }
+
+  // The binding that makes the CSRF defence work: the cookie value must be the
+  // same nonce that is signed inside the state.
+  const nonce = cookie.slice(`${LOGIN_STATE_COOKIE}=`.length).split(';')[0];
+  const state = location.searchParams.get('state');
+  const verified = await verifyToken(state, env.SESSION_SECRET, {
+    nowSeconds: Math.floor(Date.now() / 1000), expectType: 'login',
+  });
+  assert.equal(verified.ok, true);
+  assert.equal(verified.payload.n, nonce);
 });
