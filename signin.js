@@ -22,6 +22,15 @@ function opponentsFor(playerId) {
   return group.filter((id) => id !== playerId);
 }
 
+/** How many of this pair's two meetings already have a result. */
+function recordedMeetings(playerId, opponentId) {
+  const ids = new Set(league.results.map((result) => result.fixtureId));
+  return league.fixtures
+    .filter((f) => [f.p1, f.p2].sort().join() === [playerId, opponentId].sort().join())
+    .filter((f) => ids.has(f.id))
+    .length;
+}
+
 let me = { signedIn: false, player: null };
 let rosterUnavailable = false;
 try {
@@ -59,7 +68,11 @@ if (rosterUnavailable) {
   fillGames('report-mine');
   fillGames('report-theirs');
   opponent.innerHTML = opponentsFor(me.player.id)
-    .map((id) => `<option value="${esc(id)}">${esc(nameOf.get(id))}</option>`).join('');
+    .map((id) => {
+      const done = recordedMeetings(me.player.id, id);
+      const suffix = done ? ` — ${done} of 2 recorded` : '';
+      return `<option value="${esc(id)}">${esc(nameOf.get(id))}${esc(suffix)}</option>`;
+    }).join('');
 
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
@@ -80,7 +93,11 @@ if (rosterUnavailable) {
       });
       const body = await response.json().catch(() => ({}));
       if (response.ok) {
-        status.textContent = 'Recorded. The table updates in about a minute.';
+        const which = body.meeting && body.meetingsTotal
+          ? ` — meeting ${body.meeting} of ${body.meetingsTotal}`
+          : '';
+        const round = body.round ? `Round ${body.round}` : 'Recorded';
+        status.textContent = `${round}${which}. The table updates in about a minute.`;
       } else {
         status.textContent = body.error ?? 'Could not save the result.';
         button.disabled = false;
