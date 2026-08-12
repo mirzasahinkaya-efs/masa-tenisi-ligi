@@ -77,7 +77,7 @@ test('a missing or unsigned state is refused', async () => {
 
 test('an identity from another workspace is refused even with an efsora address', async () => {
   const response = await handleCallback(
-    await callbackRequest(await validState()), env,
+    await callbackRequest(await validState(), { cookie: 'login_state=nonce' }), env,
     deps({ sub: 'U0X', email: 'someone@efsora.com', 'https://slack.com/team_id': 'T0SOMEWHERE' }),
   );
   assert.equal(response.status, 403);
@@ -86,7 +86,7 @@ test('an identity from another workspace is refused even with an efsora address'
 
 test('an outside email domain is refused', async () => {
   const response = await handleCallback(
-    await callbackRequest(await validState()), env,
+    await callbackRequest(await validState(), { cookie: 'login_state=nonce' }), env,
     deps({ sub: 'U0X', email: 'someone@gmail.com', 'https://slack.com/team_id': 'T0EFSORA' }),
   );
   assert.equal(response.status, 403);
