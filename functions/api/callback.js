@@ -1,0 +1,89 @@
+import { signToken, verifyToken } from '../../lib/session.js';
+import { checkIdentity } from '../../lib/auth.js';
+import { json, sessionCookie } from '../_shared/http.js';
+
+const SESSION_TTL_SECONDS = 30 * 24 * 60 * 60;
+
+export function buildAuthorizeUrl(env, state, redirectUri) {
+  const url = new URL('https://slack.com/openid/connect/authorize');
+  url.searchParams.set('client_id', env.SLACK_CLIENT_ID);
+  url.searchParams.set('scope', 'openid email profile');
+  url.searchParams.set('response_type', 'code');
+  url.searchParams.set('redirect_uri', redirectUri);
+  url.searchParams.set('state', state);
+  // Pinning the workspace here is a convenience; the callback re-checks it,
+  // because a redirect parameter is not a security control.
+  url.searchParams.set('team', env.SLACK_TEAM_ID);
+  return url.toString();
+}
+
+/** Claims only — the token came from an authenticated server-side exchange. */
+function readClaims(idToken) {
+  const [, payload] = String(idToken).split('.');
+  if (!payload) return null;
+  const padded = payload.replace(/-/g, '+').replace(/_/g, '/')
+    .padEnd(Math.ceil(payload.length / 4) * 4, '=');
+  try {
+    return JSON.parse(new TextDecoder().decode(
+      Uint8Array.from(atob(padded), (character) => character.charCodeAt(0)),
+    ));
+  } catch {
+    return null;
+  }
+}
+
+async function exchangeCodeWithSlack(env, code, redirectUri) {
+  const response = await fetch('https://slack.com/api/openid.connect.token', {
+    method: 'POST',
+    headers: { 'content-type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      client_id: env.SLACK_CLIENT_ID,
+      client_secret: env.SLACK_CLIENT_SECRET,
+      code,
+      redirect_uri: redirectUri,
+    }),
+  });
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok || !body.ok || !body.id_token) return { ok: false };
+  return { ok: true, idToken: body.id_token };
+}
+
+export async function handleCallback(request, env, deps = {}) {
+  const nowSeconds = (deps.nowSeconds ?? (() => Math.floor(Date.now() / 1000)))();
+  const url = new URL(request.url);
+  const code = url.searchParams.get('code');
+  const state = url.searchParams.get('state');
+
+  const stateCheck = await verifyToken(state, env.SESSION_SECRET, { nowSeconds });
+  if (!code || !stateCheck.ok) {
+    return json({ error: 'Sign-in could not be verified. Please start again.' }, { status: 403 });
+  }
+
+  const redirectUri = new URL('/api/callback', url.origin).toString();
+  const exchange = await (deps.exchangeCode ?? exchangeCodeWithSlack)(env, code, redirectUri);
+  if (!exchange.ok) return json({ error: 'Slack sign-in failed.' }, { status: 403 });
+
+  const claims = readClaims(exchange.idToken);
+  if (!claims) return json({ error: 'Slack sign-in failed.' }, { status: 403 });
+
+  const identity = checkIdentity(
+    { teamId: claims['https://slack.com/team_id'], email: claims.email },
+    { allowedTeamId: env.SLACK_TEAM_ID, allowedEmailDomain: env.ALLOWED_EMAIL_DOMAIN },
+  );
+  if (!identity.ok) {
+    return json({ error: 'Only Efsora Slack accounts can sign in.' }, { status: 403 });
+  }
+
+  const token = await signToken({ sub: claims.sub }, env.SESSION_SECRET, {
+    expiresInSeconds: SESSION_TTL_SECONDS, nowSeconds,
+  });
+  return new Response(null, {
+    status: 302,
+    headers: {
+      location: '/',
+      'set-cookie': sessionCookie(token, { maxAgeSeconds: SESSION_TTL_SECONDS }),
+    },
+  });
+}
+
+export const onRequestGet = ({ request, env }) => handleCallback(request, env);
