@@ -40,3 +40,32 @@ jobs:
           path: .
       - id: deployment
         uses: actions/deploy-pages@v4
+
+  # Cloudflare Pages serves the same files plus the /api/* Functions, which
+  # GitHub Pages cannot run. This job is not optional once results are submitted
+  # on the site: data/league.json is served as a static asset, so a result the
+  # API commits to the repo is not visible to anyone until the site redeploys.
+  cloudflare:
+    needs: test
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Staged explicitly rather than deploying the repo root, so what reaches a
+      # public host is a list someone chose. Add new runtime assets here — a file
+      # left out is a 404 on the live site, not a build failure.
+      - name: Stage the files the site serves
+        run: |
+          mkdir -p _site
+          cp index.html app.js signin.js style.css _routes.json _site/
+          cp -R data lib functions _site/
+
+      - uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: >-
+            pages deploy _site
+            --project-name=efsora-masa-tenisi-ligi
+            --branch=main

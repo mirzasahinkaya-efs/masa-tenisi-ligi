@@ -65,36 +65,55 @@ self-service submission.
 
 ## Deployment
 
-The site is currently served by GitHub Pages via
-`.github/workflows/pages.yml`, which builds and deploys on every push to
-`main`. A move to Cloudflare Pages is planned so that the static site and the
-`/api/*` Functions share one origin — that's what lets the session use an
-`HttpOnly` cookie instead of a token exposed to JavaScript.
+`.github/workflows/pages.yml` runs the tests, then deploys to two hosts on
+every push to `main`:
 
-The sign-in and result-submission API (`functions/api/`) is **built and tested
-but not deployed**. Cutover needs a Cloudflare Pages project connected to this
-repository, plus these variables on it:
+- **GitHub Pages** — the original URL. Static files only; it cannot run
+  `/api/*`, so the page detects that and hides the Record panel entirely.
+- **Cloudflare Pages** (`efsora-masa-tenisi-ligi.pages.dev`) — the same files
+  *plus* the Functions, so sign-in and result submission work. One origin for
+  both is what lets the session use an `HttpOnly` cookie rather than a token
+  exposed to JavaScript.
+
+The Cloudflare project is **direct upload**, not git-connected, because the
+Pages GitHub App is not installed on the account — hence the `wrangler` step in
+the workflow rather than a Cloudflare-side build.
+
+That deploy step is **not optional** once results are submitted on the site:
+`data/league.json` is served as a static asset, so a result the API commits to
+the repository stays invisible until the site redeploys. That redeploy is what
+the form means by "the table updates in about a minute".
+
+The API needs these on the Cloudflare project:
 
 | Variable | Required | Purpose |
 | --- | --- | --- |
 | `SESSION_SECRET` | yes | Signs session cookies. Changing it signs everyone out. |
 | `LEAGUE_PASSPHRASE` | yes | The shared passphrase. **Generate it, do not invent it** — see below. Rotating it does *not* end sessions already issued; change `SESSION_SECRET` too if that matters. |
 | `GITHUB_TOKEN` | yes | Fine-grained, `contents: write`, scoped to this repository only. Lets the API commit results. |
-| `GITHUB_REPO` | yes | `owner/name` of this repository. |
-| `LOGIN_KV` | no | KV namespace binding. Brakes guessing — 10 attempts per client per 10 minutes, 60 across the whole site. Without it there is no brute-force limit at all. |
+| `GITHUB_REPO` | yes | `owner/name` of this repository. Already set — not a secret. |
+| `LOGIN_KV` | no | KV namespace binding. Brakes guessing — 10 attempts per client per 10 minutes, 60 across the whole site. Already bound. Without it there is no brute-force limit at all. |
 
-Set the three secrets with `wrangler`, never through a file in the repo:
+The three secrets are set with `wrangler`, never through a file in the repo:
 
-    npx wrangler pages secret put SESSION_SECRET --project-name <project>
+    npx wrangler login
+    npx wrangler pages secret put SESSION_SECRET --project-name efsora-masa-tenisi-ligi
 
-The passphrase's own entropy is the real control here, not the brake — the
-brake deliberately fails open, and without `LOGIN_KV` it does not exist. So
-generate the passphrase rather than choosing one:
+It prompts for the value, so nothing lands in shell history. Generate the
+random ones straight to the clipboard rather than printing them:
 
-    node -e "console.log(crypto.randomUUID().slice(0, 18))"
+    node -e "console.log(crypto.randomUUID().slice(0,18))" | pbcopy
+
+The passphrase's own entropy is the real control here, not the brake — the brake
+deliberately fails open, and without `LOGIN_KV` it does not exist. So generate
+the passphrase too; you only need to read it once, to paste into Slack.
 
 Sessions from this route last 14 days, shorter than the Slack route's 30, since
 the credential is weaker.
+
+The deploy job additionally needs two **GitHub** repository secrets:
+`CLOUDFLARE_API_TOKEN` (a token with the *Cloudflare Pages: Edit* permission)
+and `CLOUDFLARE_ACCOUNT_ID`.
 
 `SLACK_CLIENT_ID`, `SLACK_CLIENT_SECRET`, `SLACK_TEAM_ID` and
 `ALLOWED_EMAIL_DOMAIN` belong to the Slack sign-in route (`/api/login`,
@@ -103,9 +122,9 @@ Efsora workspace admin rights. It is dormant, not dead: with those unset,
 `/api/login` answers 503 rather than bouncing anyone to a broken Slack page,
 and `/api/passphrase` works on its own.
 
-Until cutover, the live URL above is the only deployment. It serves no `/api/*`,
-so the page detects that and hides the Record panel rather than offering a
-button that cannot work.
+Until the secrets are set, `/api/passphrase` answers 503 — a configuration
+fault, deliberately distinct from a refused sign-in — and the page falls back to
+read-only.
 
 ## Local preview
 
