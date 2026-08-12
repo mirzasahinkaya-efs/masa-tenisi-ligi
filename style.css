@@ -202,7 +202,11 @@ main > section { scroll-margin-top: 56px; }
 }
 .account__action:hover { border-color: var(--blue); color: var(--blue); }
 
-.report { display: grid; gap: 10px; grid-template-columns: 1fr auto 1fr auto auto; align-items: center; }
+.report {
+  display: grid; gap: 10px;
+  grid-template-columns: auto minmax(9rem, 1.6fr) auto minmax(4rem, .6fr) auto minmax(4rem, .6fr) auto;
+  align-items: center;
+}
 .report label {
   font: 600 10px 'Montserrat', sans-serif; letter-spacing: .12em;
   text-transform: uppercase; color: var(--label);

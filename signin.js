@@ -44,7 +44,8 @@ try {
 }
 
 if (rosterUnavailable) {
-  account.innerHTML = '<span class="account__note">Sign-in unavailable just now</span>';
+  account.innerHTML = '<span class="account__note">Sign-in unavailable just now</span>'
+    + ' <a class="account__action" href="./api/logout">Sign out</a>';
 } else if (!me.signedIn) {
   account.innerHTML = '<a class="account__action" href="./api/login">Sign in with Slack</a>';
 } else if (!me.player) {
