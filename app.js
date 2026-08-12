@@ -155,8 +155,12 @@ function renderCurrentRound() {
 
 function bracketSlot(playerId, placeholder, games, isWinner) {
   const placeholderText = placeholder.startsWith('@') ? 'CEO' : placeholder;
-  const label = playerId
-    ? `<span class="${isWinner ? 'slot--winner' : ''}">${esc(nameOf.get(playerId))}</span>`
+  // A resolved id with no name means the roster and the bracket have drifted
+  // apart — show the placeholder rather than an empty slot, which would give a
+  // reader no clue anything was wrong.
+  const name = playerId ? nameOf.get(playerId) : undefined;
+  const label = name
+    ? `<span class="${isWinner ? 'slot--winner' : ''}">${esc(name)}</span>`
     : `<span class="slot--empty">${esc(placeholderText)}</span>`;
   const score = games === null ? '' : `<span class="slot__games">${games}</span>`;
   return `<div class="slot">${label}${score}</div>`;
