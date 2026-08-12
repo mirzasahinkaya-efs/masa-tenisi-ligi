@@ -120,6 +120,12 @@ test('an absent identity is never matched to a player', () => {
 });
 
 test('a missing policy refuses rather than throwing', () => {
-  assert.deepEqual(checkIdentity({ teamId: 'T0EFSORA', email: 'a@efsora.com' }), { ok: false, error: 'MISSING' });
-  assert.deepEqual(checkIdentity({ teamId: 'T0EFSORA', email: 'a@efsora.com' }, {}), { ok: false, error: 'MISSING' });
+  assert.deepEqual(
+    checkIdentity({ teamId: 'T0EFSORA', email: 'a@efsora.com' }),
+    { ok: false, error: 'MISCONFIGURED' },
+  );
+  assert.deepEqual(
+    checkIdentity({ teamId: 'T0EFSORA', email: 'a@efsora.com' }, {}),
+    { ok: false, error: 'MISCONFIGURED' },
+  );
 });

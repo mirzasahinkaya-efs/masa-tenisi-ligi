@@ -103,6 +103,16 @@ test('a valid Efsora identity who is not a player still signs in', async () => {
   assert.ok(response.headers.get('set-cookie'));
 });
 
+test('a callback with a valid identity but a misconfigured deployment returns 503, not 403', async () => {
+  const misconfigured = { ...env, SLACK_TEAM_ID: undefined };
+  const response = await handleCallback(
+    await callbackRequest(await validState(), { cookie: `${LOGIN_STATE_COOKIE}=nonce` }), misconfigured,
+    deps({ sub: 'U0AT8HQ7C9K', email: 'mirza.sahinkaya@efsora.com', 'https://slack.com/team_id': 'T0EFSORA' }),
+  );
+  assert.equal(response.status, 503);
+  assert.equal(response.headers.get('set-cookie'), null);
+});
+
 test('no error response leaks a secret', async () => {
   const response = await handleCallback(
     await callbackRequest('forged'), env,

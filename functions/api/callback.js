@@ -84,6 +84,9 @@ export async function handleCallback(request, env, deps = {}) {
     { allowedTeamId: env.SLACK_TEAM_ID, allowedEmailDomain: env.ALLOWED_EMAIL_DOMAIN },
   );
   if (!identity.ok) {
+    if (identity.error === 'MISCONFIGURED') {
+      return json({ error: 'Sign-in is not configured. Please tell an admin.' }, { status: 503 });
+    }
     return json({ error: 'Only Efsora Slack accounts can sign in.' }, { status: 403 });
   }
 
