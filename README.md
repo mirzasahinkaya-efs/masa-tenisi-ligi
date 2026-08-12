@@ -43,7 +43,7 @@ Two ways to record a result, and they write to the same place (`data/league.json
       npm run score -- <playerA> <playerB> <aGames>-<bGames>
 
   The score is always from `playerA`'s point of view, e.g. `npm run score --
-  cem tolga 3-1` records Cem winning 3 games to 1. Add `--fix` to overwrite
+  defne tolga 3-1` records Defne winning 3 games to 1. Add `--fix` to overwrite
   when both meetings between the two players are already recorded (add
   `--dry-run` to preview either case without writing).
 
