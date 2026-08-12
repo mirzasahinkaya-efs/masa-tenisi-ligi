@@ -65,6 +65,66 @@ test('a valid callback sets an HttpOnly session cookie and redirects', async () 
   for (const flag of ['HttpOnly', 'Secure', 'SameSite=Lax']) assert.ok(cookie.includes(flag), cookie);
 });
 
+test('the callback marks its session as holding a Slack subject', async () => {
+  // Nothing else observes what the callback actually emits — the /api/me tests
+  // below hand-mint their own tokens — so without this the dormant route could
+  // stop stamping the kind and every Slack sign-in would silently resolve to
+  // "not a player".
+  const response = await handleCallback(
+    await callbackRequest(await validState(), { cookie: `${LOGIN_STATE_COOKIE}=nonce` }), env,
+    deps({ sub: 'U0AT8HQ7C9K', email: 'a@efsora.com', 'https://slack.com/team_id': 'T0EFSORA' }),
+  );
+  const setCookies = [...response.headers].filter(([name]) => name === 'set-cookie');
+  const session = setCookies.map(([, value]) => value)
+    .find((value) => value.startsWith(`${SESSION_COOKIE}=`));
+  const token = session.slice(`${SESSION_COOKIE}=`.length).split(';')[0];
+
+  const verified = await verifyToken(token, env.SESSION_SECRET, {
+    nowSeconds: NOW, expectType: 'session',
+  });
+  assert.equal(verified.ok, true);
+  assert.equal(verified.payload.k, 'slack');
+  assert.equal(verified.payload.sub, 'U0AT8HQ7C9K');
+});
+
+test('the cookie the callback sets is one /api/me resolves to that player', async () => {
+  const response = await handleCallback(
+    await callbackRequest(await validState(), { cookie: `${LOGIN_STATE_COOKIE}=nonce` }), env,
+    deps({ sub: 'U0AT8HQ7C9K', email: 'a@efsora.com', 'https://slack.com/team_id': 'T0EFSORA' }),
+  );
+  const cookie = [...response.headers]
+    .filter(([name]) => name === 'set-cookie')
+    .map(([, value]) => value)
+    .find((value) => value.startsWith(`${SESSION_COOKIE}=`))
+    .split(';')[0];
+
+  const resolved = await handleMe(
+    new Request('https://league.test/api/me', { headers: { cookie } }),
+    env,
+    { nowSeconds: () => NOW, makeStore: () => ({ read: async () => ({ league, sha: 's' }) }) },
+  );
+  assert.deepEqual(await resolved.json(), {
+    signedIn: true, player: { id: 'mirza', short: 'Mirza Ş.' },
+  });
+});
+
+test('login refuses rather than redirecting to Slack when unconfigured', async () => {
+  // Otherwise "dormant" is only nominal: it would 302 to Slack with
+  // client_id=undefined and dead-end on Slack's error page, reading as our bug.
+  for (const broken of [
+    { SESSION_SECRET: 's' },
+    { ...env, SLACK_CLIENT_ID: undefined },
+    { ...env, SLACK_TEAM_ID: undefined },
+  ]) {
+    const response = await login({
+      request: new Request('https://league.test/api/login'), env: broken,
+    });
+    assert.equal(response.status, 503);
+    assert.equal(response.headers.get('location'), null);
+    assert.equal(response.headers.get('set-cookie'), null);
+  }
+});
+
 test('a missing or unsigned state is refused', async () => {
   for (const state of ['', 'forged', 'a.b']) {
     const response = await handleCallback(
@@ -132,7 +192,7 @@ test('me reports a signed-out caller without touching the store', async () => {
 });
 
 test('me resolves a signed-in caller to their player', async () => {
-  const token = await signToken({ t: 'session', sub: 'U0AT8HQ7C9K' }, env.SESSION_SECRET, {
+  const token = await signToken({ t: 'session', k: 'slack', sub: 'U0AT8HQ7C9K' }, env.SESSION_SECRET, {
     expiresInSeconds: 3600, nowSeconds: Math.floor(Date.now() / 1000),
   });
   const request = new Request('https://league.test/api/me', {
@@ -146,7 +206,7 @@ test('me resolves a signed-in caller to their player', async () => {
 });
 
 test('me reports the roster as unavailable rather than rejecting', async () => {
-  const token = await signToken({ t: 'session', sub: 'U0AT8HQ7C9K' }, env.SESSION_SECRET, {
+  const token = await signToken({ t: 'session', k: 'slack', sub: 'U0AT8HQ7C9K' }, env.SESSION_SECRET, {
     expiresInSeconds: 3600, nowSeconds: Math.floor(Date.now() / 1000),
   });
   const request = new Request('https://league.test/api/me', {
@@ -169,7 +229,7 @@ test('logout clears the cookie and redirects home', async () => {
 });
 
 test('me reports a signed-in colleague who is not a player', async () => {
-  const token = await signToken({ t: 'session', sub: 'U0COLLEAGUE' }, env.SESSION_SECRET, {
+  const token = await signToken({ t: 'session', k: 'slack', sub: 'U0COLLEAGUE' }, env.SESSION_SECRET, {
     expiresInSeconds: 3600, nowSeconds: Math.floor(Date.now() / 1000),
   });
   const request = new Request('https://league.test/api/me', {

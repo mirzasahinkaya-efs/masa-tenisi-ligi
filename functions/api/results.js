@@ -1,5 +1,5 @@
 import { verifyToken } from '../../lib/session.js';
-import { canReport, playerForSlackId } from '../../lib/auth.js';
+import { canReport, playerForSubject } from '../../lib/auth.js';
 import { findOpenFixture, orientResult, playableFixtures } from '../../lib/report.js';
 import { parseScore } from '../../lib/validate.js';
 import { createStore } from '../_shared/store.js';
@@ -45,7 +45,7 @@ export async function handleResultPost(request, env, deps = {}) {
     return json({ error: 'Could not reach the league data. Please try again.' }, { status: 502 });
   }
 
-  const reporter = playerForSlackId(league, session.payload.sub);
+  const reporter = playerForSubject(league, session.payload);
   if (!reporter) {
     return json({ error: 'You are not on the league roster.' }, { status: 403 });
   }
@@ -70,7 +70,7 @@ export async function handleResultPost(request, env, deps = {}) {
   // contains them and this check cannot currently fail. It stays so that a
   // future change to the request shape cannot silently remove authorisation.
   // Admins correct results with `npm run score -- ... --fix`, not through here.
-  const permission = canReport(league, session.payload.sub, open.fixture);
+  const permission = canReport(league, reporter, open.fixture, { kind: session.payload.k });
   if (!permission.ok) {
     return json({ error: 'You can only record your own matches.' }, { status: 403 });
   }
@@ -95,7 +95,12 @@ export async function handleResultPost(request, env, deps = {}) {
     const results = [...current.results, {
       fixtureId: fresh.fixture.id,
       ...oriented,
-      reportedBy: session.payload.sub,
+      // Namespaced by how the submitter was identified, because the two
+      // routes prove different things: `slack:` is a verified identity,
+      // `player:` is self-asserted behind a shared passphrase. A bare name
+      // would read as attribution the passphrase route cannot support. The
+      // CLI writes 'cli'.
+      reportedBy: `${session.payload.k}:${reporter.id}`,
       reportedAt: new Date(nowSeconds * 1000).toISOString(),
     }];
     return {

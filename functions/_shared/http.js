@@ -6,7 +6,14 @@ export const SESSION_COOKIE = '__Host-league_session';
 export function json(data, { status = 200, headers = {} } = {}) {
   return new Response(JSON.stringify(data), {
     status,
-    headers: { 'content-type': 'application/json; charset=utf-8', ...headers },
+    headers: {
+      'content-type': 'application/json; charset=utf-8',
+      // /api/me decides which of the account panel's states renders, so a
+      // stored copy would show a stale signed-out page after a sign-in
+      // reloads. None of these responses is ever worth caching.
+      'cache-control': 'no-store',
+      ...headers,
+    },
   });
 }
 

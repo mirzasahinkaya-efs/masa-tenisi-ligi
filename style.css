@@ -208,28 +208,35 @@ main > section { scroll-margin-top: 56px; }
 }
 .account__action:hover { border-color: var(--blue); color: var(--blue); }
 
-.report {
+.report, .signin {
   display: grid; gap: 10px;
-  grid-template-columns: auto minmax(9rem, 1.6fr) auto minmax(4rem, .6fr) auto minmax(4rem, .6fr) auto;
   align-items: center;
 }
-.report label {
+.report {
+  grid-template-columns: auto minmax(9rem, 1.6fr) auto minmax(4rem, .6fr) auto minmax(4rem, .6fr) auto;
+}
+.signin {
+  grid-template-columns: auto minmax(9rem, 1.2fr) auto minmax(9rem, 1.2fr) auto;
+}
+.report label, .signin label {
   font: 600 10px 'Montserrat', sans-serif; letter-spacing: .12em;
   text-transform: uppercase; color: var(--label);
 }
-.report select, .report button {
+.report select, .report button,
+.signin select, .signin input, .signin button {
   padding: 9px 10px; font: 500 14px 'Roboto', sans-serif;
   color: var(--text); background: var(--bg);
   border: 1px solid var(--border-strong);
 }
-.report button {
+.report button, .signin button {
   font: 600 11px 'Montserrat', sans-serif; letter-spacing: .14em;
   text-transform: uppercase; color: var(--bg); background: var(--green);
   border-color: var(--green); cursor: pointer;
 }
-.report button:disabled { opacity: .5; cursor: default; }
+.report button:disabled, .signin button:disabled { opacity: .5; cursor: default; }
 .report__status { margin: 12px 0 0; font-size: 13px; color: var(--muted); min-height: 1.2em; }
+.signin__note { margin: 0 0 14px; font-size: 13px; color: var(--muted); max-width: 64ch; }
 
 @media (max-width: 720px) {
-  .report { grid-template-columns: 1fr; }
+  .report, .signin { grid-template-columns: 1fr; }
 }

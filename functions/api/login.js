@@ -1,11 +1,20 @@
 import { signToken } from '../../lib/session.js';
 import { buildAuthorizeUrl } from './callback.js';
-import { loginStateCookie } from '../_shared/http.js';
+import { json, loginStateCookie } from '../_shared/http.js';
 
 const STATE_TTL_SECONDS = 600;
 
-export async function onRequestGet({ request, env }) {
+export async function handleLogin(request, env) {
   const nowSeconds = Math.floor(Date.now() / 1000);
+
+  // Without this the route is only nominally dormant: it would happily
+  // redirect to Slack with `client_id=undefined` and dead-end on Slack's own
+  // error page, which reads as our bug. Refusing up front makes an
+  // unconfigured deployment say so.
+  if (!env.SLACK_CLIENT_ID || !env.SLACK_TEAM_ID || !env.SESSION_SECRET) {
+    return json({ error: 'Slack sign-in is not configured on this deployment.' }, { status: 503 });
+  }
+
   // The state is a signed, short-lived token rather than a random value in a
   // store: it proves the callback began at our own /api/login without needing
   // server-side state.
@@ -24,3 +33,5 @@ export async function onRequestGet({ request, env }) {
     },
   });
 }
+
+export const onRequestGet = ({ request, env }) => handleLogin(request, env);

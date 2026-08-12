@@ -60,7 +60,22 @@
 
   <section class="panel panel--action" id="report" hidden>
     <h2>Record a result</h2>
-    <form class="report" id="report-form">
+
+    <p class="signin__note" id="signin-note" hidden>Pick your name and enter the
+    league passphrase from the Slack channel. The passphrase is shared, so it
+    proves you are one of us, not which one — please only submit your own
+    matches.</p>
+    <form class="signin" id="signin-form" hidden>
+      <label for="signin-player">You are</label>
+      <select id="signin-player" name="player" required></select>
+      <label for="signin-passphrase">Passphrase</label>
+      <input type="password" id="signin-passphrase" name="passphrase"
+           autocomplete="current-password" required>
+      <button type="submit">Sign in</button>
+    </form>
+    <p class="report__status" id="signin-status" role="status"></p>
+
+    <form class="report" id="report-form" hidden>
       <label for="report-opponent">Opponent</label>
       <select id="report-opponent" name="opponent" required></select>
       <label for="report-mine">Your games</label>

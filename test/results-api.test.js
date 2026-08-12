@@ -9,9 +9,10 @@ const NOW = 1_786_000_000;
 const env = { SESSION_SECRET: 'session-secret', GITHUB_TOKEN: 't', GITHUB_REPO: 'o/r' };
 const base = JSON.parse(await readFile(new URL('../data/league.json', import.meta.url), 'utf8'));
 
-const session = (slackId) => signToken({ t: 'session', sub: slackId }, env.SESSION_SECRET, {
-  expiresInSeconds: 3600, nowSeconds: NOW,
-});
+const session = (slackId) => signToken(
+  { t: 'session', k: 'slack', sub: slackId }, env.SESSION_SECRET,
+  { expiresInSeconds: 3600, nowSeconds: NOW },
+);
 
 const post = async (body, slackId) => new Request('https://league.test/api/results', {
   method: 'POST',
@@ -47,6 +48,85 @@ function fakeStore(league = structuredClone(base)) {
 
 const slackOf = (id) => base.players.find((p) => p.id === id).slackId;
 const deps = (fake) => ({ nowSeconds: () => NOW, makeStore: () => fake.store, notify: async () => {} });
+
+// The passphrase route is the one that can actually be deployed, so it needs
+// its own end-to-end coverage here: a session minted by /api/passphrase names
+// the player by roster id, and results.js resolves that through a different
+// branch of playerForSubject than the Slack route uses.
+const passphraseSession = (playerId) => signToken(
+  { t: 'session', k: 'player', sub: playerId }, env.SESSION_SECRET,
+  { expiresInSeconds: 3600, nowSeconds: NOW },
+);
+
+const postAs = async (body, token) => new Request('https://league.test/api/results', {
+  method: 'POST',
+  headers: {
+    'content-type': 'application/json',
+    ...(token ? { cookie: `${SESSION_COOKIE}=${token}` } : {}),
+  },
+  body: JSON.stringify(body),
+});
+
+test('a passphrase session records a result, credited to that player', async () => {
+  const fake = fakeStore();
+  const fixture = base.fixtures.find((f) => f.p1 === 'mirza' || f.p2 === 'mirza');
+  const opponentId = fixture.p1 === 'mirza' ? fixture.p2 : fixture.p1;
+
+  const response = await handleResultPost(
+    await postAs({ opponentId, myGames: 3, theirGames: 1 }, await passphraseSession('mirza')),
+    env, deps(fake),
+  );
+  assert.equal(response.status, 200);
+  assert.equal(fake.state.league.results.length, 1);
+
+  const stored = fake.state.league.results[0];
+  const target = base.fixtures.find((f) => f.id === stored.fixtureId);
+  const mirzaGames = target.p1 === 'mirza' ? stored.p1Games : stored.p2Games;
+  assert.equal(mirzaGames, 3, 'the session holder must be credited with 3 games');
+  assert.equal(stored.reportedBy, 'player:mirza');
+});
+
+test('a Slack-signed result is provenanced apart from a passphrase one', async () => {
+  // The two routes prove different things, so the stored field has to say
+  // which one was used rather than naming a player as if both were equal.
+  const fake = fakeStore();
+  const fixture = base.fixtures.find((f) => f.p1 === 'mirza' || f.p2 === 'mirza');
+  const opponentId = fixture.p1 === 'mirza' ? fixture.p2 : fixture.p1;
+
+  await handleResultPost(
+    await post({ opponentId, myGames: 3, theirGames: 1 }, slackOf('mirza')), env, deps(fake),
+  );
+  assert.equal(fake.state.league.results[0].reportedBy, 'slack:mirza');
+});
+
+test('a passphrase session cannot report a match it is not in', async () => {
+  // mirza is a season admin. Admin authority must not follow from knowing the
+  // shared passphrase, so this has to be refused even though the same player
+  // signed in through Slack could do it.
+  const fake = fakeStore();
+  const other = base.fixtures.find((f) => f.p1 !== 'mirza' && f.p2 !== 'mirza');
+  const response = await handleResultPost(
+    await postAs(
+      { opponentId: other.p2, myGames: 3, theirGames: 1 }, await passphraseSession('mirza'),
+    ),
+    env, deps(fake),
+  );
+  assert.ok(response.status >= 400, `expected a refusal, got ${response.status}`);
+  assert.equal(fake.state.league.results.length, 0);
+});
+
+test('a legacy session with no subject kind authorises nobody', async () => {
+  const fake = fakeStore();
+  const legacy = await signToken(
+    { t: 'session', sub: slackOf('mirza') }, env.SESSION_SECRET,
+    { expiresInSeconds: 3600, nowSeconds: NOW },
+  );
+  const response = await handleResultPost(
+    await postAs({ opponentId: 'tolga', myGames: 3, theirGames: 1 }, legacy), env, deps(fake),
+  );
+  assert.equal(response.status, 403);
+  assert.equal(fake.state.league.results.length, 0);
+});
 
 test('a player records their own match and it is committed', async () => {
   const fake = fakeStore();

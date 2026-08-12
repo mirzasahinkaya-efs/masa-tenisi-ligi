@@ -15,6 +15,18 @@ test('json responses carry the status and content type', async () => {
   assert.deepEqual(await response.json(), { hello: 'world' });
 });
 
+test('json responses are never stored', async () => {
+  // /api/me decides which account state renders, so a cached copy would show a
+  // stale signed-out page after a sign-in reloads the page.
+  assert.equal(json({}).headers.get('cache-control'), 'no-store');
+  assert.equal(json({}, { status: 503 }).headers.get('cache-control'), 'no-store');
+});
+
+test('an explicit header still wins over the defaults', () => {
+  const response = json({}, { headers: { 'cache-control': 'max-age=60' } });
+  assert.equal(response.headers.get('cache-control'), 'max-age=60');
+});
+
 test('a named cookie is read out of the header', () => {
   assert.equal(readCookie(withCookies(`a=1; ${SESSION_COOKIE}=abc; b=2`), SESSION_COOKIE), 'abc');
 });

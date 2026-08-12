@@ -90,9 +90,12 @@ export async function handleCallback(request, env, deps = {}) {
     return json({ error: 'Only Efsora Slack accounts can sign in.' }, { status: 403 });
   }
 
-  const token = await signToken({ t: 'session', sub: claims.sub }, env.SESSION_SECRET, {
-    expiresInSeconds: SESSION_TTL_SECONDS, nowSeconds,
-  });
+  // `k: 'slack'` marks the subject as a Slack id. The passphrase route issues
+  // `k: 'player'` instead, and playerForSubject will not confuse the two.
+  const token = await signToken(
+    { t: 'session', k: 'slack', sub: claims.sub }, env.SESSION_SECRET,
+    { expiresInSeconds: SESSION_TTL_SECONDS, nowSeconds },
+  );
   // Two Set-Cookie headers: a plain object literal cannot hold duplicate
   // keys, so Headers#append is required to send both.
   const headers = new Headers({ location: '/' });
