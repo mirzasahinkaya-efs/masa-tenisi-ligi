@@ -205,3 +205,12 @@ test('a match recorded by someone else in the gap is refused, not double-recorde
   assert.equal(response.status, 409);
   assert.equal(reads, 1);
 });
+
+test('a store read failure returns 502 rather than throwing', async () => {
+  const failing = { read: async () => { throw Object.assign(new Error('boom'), { status: 401 }); } };
+  const response = await handleResultPost(
+    await post({ opponentId: 'tolga', myGames: 3, theirGames: 1 }, slackOf('mirza')),
+    env, { nowSeconds: () => NOW, makeStore: () => failing },
+  );
+  assert.equal(response.status, 502);
+});

@@ -36,7 +36,14 @@ export async function handleResultPost(request, env, deps = {}) {
     token: env.GITHUB_TOKEN, repo: env.GITHUB_REPO,
   })))();
 
-  const { league } = await store.read();
+  let league;
+  try {
+    ({ league } = await store.read());
+  } catch (error) {
+    // read() throws on a non-OK response. Return the 502 this handler already
+    // intends for store failures rather than raising into a 500 HTML page.
+    return json({ error: 'Could not reach the league data. Please try again.' }, { status: 502 });
+  }
 
   const reporter = playerForSlackId(league, session.payload.sub);
   if (!reporter) {
