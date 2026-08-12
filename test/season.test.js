@@ -15,10 +15,27 @@ test('players have unique ids, Slack ids and short names', () => {
   assert.equal(new Set(league.players.map((p) => p.short)).size, count);
 });
 
-test('the two groups partition the roster and are near-equal in size', () => {
-  const ids = league.players.map((p) => p.id).sort();
-  assert.deepEqual([...league.groups.A, ...league.groups.B].sort(), ids);
+test('the two groups partition the group-stage players and are near-equal in size', () => {
+  const groupStage = league.players.filter((player) => player.groupStage !== false);
+  assert.deepEqual(
+    [...league.groups.A, ...league.groups.B].sort(),
+    groupStage.map((player) => player.id).sort(),
+  );
   assert.ok(Math.abs(league.groups.A.length - league.groups.B.length) <= 1);
+});
+
+test('every fixed playoff entrant is a real player who plays no group stage', () => {
+  const fixed = league.playoffFixtures
+    .flatMap((fixture) => [fixture.slotP1, fixture.slotP2])
+    .filter((slot) => slot.startsWith('@'))
+    .map((slot) => slot.slice(1));
+  assert.ok(fixed.length > 0, 'the bracket should name at least one fixed entrant');
+  for (const id of fixed) {
+    const player = league.players.find((p) => p.id === id);
+    assert.ok(player, `no such player: ${id}`);
+    assert.equal(player.groupStage, false, `${id} must not also play the group stage`);
+    assert.equal([...league.groups.A, ...league.groups.B].includes(id), false);
+  }
 });
 
 test('the group stage has fifty fixtures over ten rounds', () => {
@@ -46,9 +63,9 @@ test('fixtures only pair players from the same group', () => {
   }
 });
 
-test('with four playoff matches the season totals fifty-four', () => {
-  assert.equal(league.playoffFixtures.length, 4);
-  assert.equal(league.fixtures.length + league.playoffFixtures.length, 54);
+test('with eight playoff matches the season totals fifty-eight', () => {
+  assert.equal(league.playoffFixtures.length, 8);
+  assert.equal(league.fixtures.length + league.playoffFixtures.length, 58);
 });
 
 test('ten rounds run Monday to Friday from the season start', () => {

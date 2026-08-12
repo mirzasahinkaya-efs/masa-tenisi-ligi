@@ -98,6 +98,14 @@
       "short": "Tuğberk G.",
       "slackId": "U0BEE57LQ90",
       "status": "provisional"
+    },
+    {
+      "id": "tugkan",
+      "name": "Tuğkan T.",
+      "short": "Tuğkan T.",
+      "slackId": "U094H3DBEUW",
+      "groupStage": false,
+      "status": "provisional"
     }
   ],
   "groups": {
@@ -573,22 +581,57 @@
   ],
   "playoffFixtures": [
     {
+      "id": "QF1",
+      "stage": "playoff",
+      "phase": "Quarter-finals",
+      "label": "Quarter-final 1",
+      "slotP1": "A1",
+      "slotP2": "@tugkan"
+    },
+    {
+      "id": "QF2",
+      "stage": "playoff",
+      "phase": "Quarter-finals",
+      "label": "Quarter-final 2",
+      "slotP1": "B2",
+      "slotP2": "A3"
+    },
+    {
+      "id": "QF3",
+      "stage": "playoff",
+      "phase": "Quarter-finals",
+      "label": "Quarter-final 3",
+      "slotP1": "A2",
+      "slotP2": "B3"
+    },
+    {
+      "id": "QF4",
+      "stage": "playoff",
+      "phase": "Quarter-finals",
+      "label": "Quarter-final 4",
+      "slotP1": "B1",
+      "slotP2": "A4"
+    },
+    {
       "id": "SF1",
       "stage": "playoff",
-      "label": "Semifinal 1",
-      "slotP1": "A1",
-      "slotP2": "B2"
+      "phase": "Semi-finals",
+      "label": "Semi-final 1",
+      "slotP1": "W-QF1",
+      "slotP2": "W-QF2"
     },
     {
       "id": "SF2",
       "stage": "playoff",
-      "label": "Semifinal 2",
-      "slotP1": "B1",
-      "slotP2": "A2"
+      "phase": "Semi-finals",
+      "label": "Semi-final 2",
+      "slotP1": "W-QF3",
+      "slotP2": "W-QF4"
     },
     {
       "id": "FINAL",
       "stage": "playoff",
+      "phase": "Final",
       "label": "Final",
       "slotP1": "W-SF1",
       "slotP2": "W-SF2"
@@ -596,6 +639,7 @@
     {
       "id": "THIRD",
       "stage": "playoff",
+      "phase": "Final",
       "label": "Third place",
       "slotP1": "L-SF1",
       "slotP2": "L-SF2"

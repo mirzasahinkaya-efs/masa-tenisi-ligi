@@ -17,7 +17,8 @@ function buildRounds(startDate, count) {
   }));
 }
 
-const playerIds = ROSTER.map((player) => player.id);
+const groupStagePlayers = ROSTER.filter((player) => player.groupStage !== false);
+const playerIds = groupStagePlayers.map((player) => player.id);
 const groups = drawGroups(playerIds, SEASON.drawSeed);
 
 const fixtures = [
