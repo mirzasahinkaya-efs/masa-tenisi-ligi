@@ -33,6 +33,7 @@ function recordedMeetings(playerId, opponentId) {
 
 let me = { signedIn: false, player: null };
 let rosterUnavailable = false;
+let apiAvailable = true;
 try {
   const response = await fetch('./api/me', { credentials: 'same-origin' });
   const body = await response.json();
@@ -46,13 +47,18 @@ try {
     rosterUnavailable = true;
   }
 } catch {
-  // Either the request failed outright, or the body wasn't JSON at all —
-  // e.g. a static host's HTML 404 page when no API is deployed yet, which is
-  // exactly what happens on the current GitHub Pages host. Either way there
-  // is no usable signal, so the page falls back to its read-only default.
+  // Either the request failed outright, or the body wasn't JSON at all — e.g. a
+  // static host's HTML 404 when no API is deployed. Showing a sign-in link here
+  // would be a dead button, so suppress the affordance entirely rather than
+  // advertising a feature this host cannot serve.
+  apiAvailable = false;
 }
 
-if (rosterUnavailable) {
+if (!apiAvailable) {
+  // Read-only host: leave the account slot empty and hide the Record nav link.
+  account.innerHTML = '';
+  document.getElementById('nav-report')?.setAttribute('hidden', '');
+} else if (rosterUnavailable) {
   account.innerHTML = '<span class="account__note">Sign-in unavailable just now</span>'
     + ' <a class="account__action" href="./api/logout">Sign out</a>';
 } else if (!me.signedIn) {
