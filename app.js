@@ -154,27 +154,36 @@ function renderCurrentRound() {
 }
 
 function bracketSlot(playerId, placeholder, games, isWinner) {
+  const placeholderText = placeholder.startsWith('@') ? 'CEO' : placeholder;
   const label = playerId
     ? `<span class="${isWinner ? 'slot--winner' : ''}">${esc(nameOf.get(playerId))}</span>`
-    : `<span class="slot--empty">${esc(placeholder)}</span>`;
+    : `<span class="slot--empty">${esc(placeholderText)}</span>`;
   const score = games === null ? '' : `<span class="slot__games">${games}</span>`;
   return `<div class="slot">${label}${score}</div>`;
 }
 
 function renderBracket() {
   const bracket = resolveBracket(tables, allFixtures, league.results);
+  const phases = [...new Set(bracket.map((match) => match.phase))];
 
-  document.getElementById('bracket').innerHTML = bracket.map((match) => {
-    const { result } = match;
-    const p1Won = result ? result.p1Games > result.p2Games : false;
-    const p2Won = result ? result.p2Games > result.p1Games : false;
-    const isFinal = match.id === 'FINAL';
-
+  document.getElementById('bracket').innerHTML = phases.map((phase) => {
+    const matches = bracket.filter((match) => match.phase === phase);
     return `
-      <div class="bracket-match ${isFinal ? 'bracket-match--final' : ''}">
-        <div class="bracket-match__label">${esc(match.label)}</div>
-        ${bracketSlot(match.p1, match.slotP1, result ? result.p1Games : null, p1Won)}
-        ${bracketSlot(match.p2, match.slotP2, result ? result.p2Games : null, p2Won)}
+      <div class="bracket-phase">
+        <h4>${esc(phase)}</h4>
+        <div class="bracket-phase__matches">
+          ${matches.map((match) => {
+            const { result } = match;
+            const p1Won = result ? result.p1Games > result.p2Games : false;
+            const p2Won = result ? result.p2Games > result.p1Games : false;
+            return `
+              <div class="bracket-match ${match.id === 'FINAL' ? 'bracket-match--final' : ''}">
+                <div class="bracket-match__label">${esc(match.label)}</div>
+                ${bracketSlot(match.p1, match.slotP1, result ? result.p1Games : null, p1Won)}
+                ${bracketSlot(match.p2, match.slotP2, result ? result.p2Games : null, p2Won)}
+              </div>`;
+          }).join('')}
+        </div>
       </div>`;
   }).join('');
 }

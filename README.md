@@ -10,7 +10,9 @@ working.
 ## Format
 
 Eleven players in two groups (A: 6, B: 5), double round-robin inside each
-group, top two from each group into a four-team playoff. 54 matches total.
+group, top four from Group A and top three from Group B advance, joined by
+the CEO as an eighth entrant who plays no group stage, into quarter-finals,
+semi-finals, final and third place. 58 matches total.
 
 Best of 5 games to 11. Win 3 points, loss 0. Tiebreaks: head-to-head, then
 game difference, then games won, then a seeded draw.

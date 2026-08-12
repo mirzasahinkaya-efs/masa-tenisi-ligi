@@ -154,7 +154,13 @@ main > section { scroll-margin-top: 56px; }
 .score { font: 500 13px 'DM Mono', monospace; color: var(--green); }
 .score.pending { color: var(--label); }
 
-.bracket { display: grid; gap: 12px; grid-template-columns: repeat(2, 1fr); }
+.bracket { display: grid; gap: 20px; }
+.bracket-phase h4 {
+  font: 600 11px 'Montserrat', sans-serif; letter-spacing: .14em;
+  text-transform: uppercase; color: var(--label);
+  margin: 0 0 8px; padding-bottom: 6px; border-bottom: 1px solid var(--border);
+}
+.bracket-phase__matches { display: grid; gap: 12px; grid-template-columns: repeat(2, 1fr); }
 .bracket-match { border: 1px solid var(--border); background: var(--surface-2); padding: 12px; }
 .bracket-match__label {
   font: 600 10px 'Montserrat', sans-serif; letter-spacing: .14em;
@@ -178,7 +184,7 @@ main > section { scroll-margin-top: 56px; }
 }
 
 @media (max-width: 720px) {
-  .groups, .bracket { grid-template-columns: 1fr; }
+  .groups, .bracket-phase__matches { grid-template-columns: 1fr; }
   .masthead { padding: 28px 16px 16px; }
   .sectionnav { padding: 0 16px; }
   .season-strip { gap: 1px; }
