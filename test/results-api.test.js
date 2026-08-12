@@ -154,3 +154,54 @@ test('no derived standings are ever written into the league file', async () => {
     assert.equal(key in fake.state.league, false, key);
   }
 });
+
+test('a body that is valid JSON but not an object is refused', async () => {
+  const fake = fakeStore();
+  for (const raw of ['null', '"a string"', '42', '[]', 'true']) {
+    const request = new Request('https://league.test/api/results', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', cookie: `${SESSION_COOKIE}=${await session(slackOf('mirza'))}` },
+      body: raw,
+    });
+    const response = await handleResultPost(request, env, deps(fake));
+    assert.equal(response.status, 400, `body ${raw}`);
+  }
+  assert.equal(fake.state.commits.length, 0);
+});
+
+test('a match recorded by someone else in the gap is refused, not double-recorded', async () => {
+  const league = structuredClone(base);
+  const pair = league.fixtures.filter((f) => [f.p1, f.p2].includes('mirza'));
+  const first = pair[0];
+  const opponentId = first.p1 === 'mirza' ? first.p2 : first.p1;
+  const both = league.fixtures.filter(
+    (f) => [f.p1, f.p2].sort().join() === ['mirza', opponentId].sort().join(),
+  );
+  // Close the SECOND meeting up front so only `first` is open. Without this the
+  // retry would legitimately fall through to the other fixture and succeed.
+  const second = both.find((f) => f.id !== first.id);
+  league.results.push({ fixtureId: second.id, p1Games: 3, p2Games: 0, reportedBy: 'seed', reportedAt: '2026-08-01T00:00:00Z' });
+
+  let reads = 0;
+  const store = {
+    read: async () => ({ league: structuredClone(league), sha: 's' }),
+    update: async (mutate) => {
+      // The mutation sees a league in which `first` has ALREADY been recorded
+      // by someone else, which is what the inner re-check must catch.
+      const raced = structuredClone(league);
+      raced.results.push({ fixtureId: first.id, p1Games: 3, p2Games: 1, reportedBy: 'other', reportedAt: '2026-08-02T00:00:00Z' });
+      reads += 1;
+      try {
+        mutate(raced);
+      } catch (error) {
+        return { ok: false, error: 'REJECTED', reason: error.message };
+      }
+      return { ok: true, league: raced };
+    },
+  };
+
+  const request = await post({ opponentId, myGames: 3, theirGames: 2 }, slackOf('mirza'));
+  const response = await handleResultPost(request, env, { nowSeconds: () => NOW, makeStore: () => store });
+  assert.equal(response.status, 409);
+  assert.equal(reads, 1);
+});

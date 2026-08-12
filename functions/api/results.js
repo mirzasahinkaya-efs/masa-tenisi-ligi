@@ -19,6 +19,9 @@ export async function handleResultPost(request, env, deps = {}) {
   } catch {
     return json({ error: 'Expected a JSON body.' }, { status: 400 });
   }
+  if (typeof body !== 'object' || body === null || Array.isArray(body)) {
+    return json({ error: 'Expected a JSON object.' }, { status: 400 });
+  }
 
   const score = parseScore(`${body.myGames}-${body.theirGames}`);
   if (!score.ok) {
@@ -55,6 +58,11 @@ export async function handleResultPost(request, env, deps = {}) {
     }, { status: 409 });
   }
 
+  // Defence in depth rather than a live gate: findOpenFixture is always called
+  // with the session holder as one leg, so the fixture it returns always
+  // contains them and this check cannot currently fail. It stays so that a
+  // future change to the request shape cannot silently remove authorisation.
+  // Admins correct results with `npm run score -- ... --fix`, not through here.
   const permission = canReport(league, session.payload.sub, open.fixture);
   if (!permission.ok) {
     return json({ error: 'You can only record your own matches.' }, { status: 403 });
