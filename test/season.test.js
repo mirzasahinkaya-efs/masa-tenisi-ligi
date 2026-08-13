@@ -7,12 +7,19 @@ const league = JSON.parse(
   await readFile(new URL('../data/league.json', import.meta.url), 'utf8'),
 );
 
-test('players have unique ids, Slack ids and short names', () => {
+test('players have unique ids and short names', () => {
   const count = league.players.length;
   assert.ok(count >= 4, 'a league needs at least four players');
   assert.equal(new Set(league.players.map((p) => p.id)).size, count);
-  assert.equal(new Set(league.players.map((p) => p.slackId)).size, count);
   assert.equal(new Set(league.players.map((p) => p.short)).size, count);
+});
+
+test('Slack ids are unique among the players who have one', () => {
+  // Not every player is in the tournament channel, so a missing Slack id is
+  // legitimate. Counting undefined as a value would make this pass only while
+  // exactly one player lacked one, and fail the moment a second joined.
+  const slackIds = league.players.map((p) => p.slackId).filter(Boolean);
+  assert.equal(new Set(slackIds).size, slackIds.length);
 });
 
 test('the two groups partition the group-stage players and are near-equal in size', () => {
@@ -38,20 +45,48 @@ test('every fixed playoff entrant is a real player who plays no group stage', ()
   }
 });
 
-test('the group stage has fifty fixtures over ten rounds', () => {
-  assert.equal(league.fixtures.length, 50);
+test('the group stage has sixty fixtures over ten rounds', () => {
+  assert.equal(league.fixtures.length, 60);
   assert.equal(league.fixtures.filter((f) => f.group === 'A').length, 30);
-  assert.equal(league.fixtures.filter((f) => f.group === 'B').length, 20);
+  assert.equal(league.fixtures.filter((f) => f.group === 'B').length, 30);
   assert.deepEqual(
     [...new Set(league.fixtures.map((f) => f.round))].sort((a, b) => a - b),
     [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
   );
 });
 
-test('every round holds five matches across the two groups', () => {
+test('every pair in a group meets exactly twice, in both orientations', () => {
+  // The invariant the fixture count above is only a proxy for.
+  for (const [name, members] of Object.entries(league.groups)) {
+    const own = league.fixtures.filter((f) => f.group === name);
+    assert.equal(own.length, members.length * (members.length - 1), name);
+
+    const seen = new Map();
+    for (const fixture of own) {
+      const pair = [fixture.p1, fixture.p2].sort().join('|');
+      seen.set(pair, [...(seen.get(pair) ?? []), `${fixture.p1}>${fixture.p2}`]);
+    }
+    assert.equal(seen.size, (members.length * (members.length - 1)) / 2, `${name} pair count`);
+    for (const [pair, orientations] of seen) {
+      assert.equal(orientations.length, 2, `${pair} should meet twice`);
+      assert.equal(new Set(orientations).size, 2, `${pair} meets twice in the same orientation`);
+    }
+  }
+});
+
+test('every round holds six matches across the two groups', () => {
   for (let round = 1; round <= 10; round += 1) {
     const inRound = league.fixtures.filter((f) => f.round === round);
-    assert.equal(inRound.length, 5, `round ${round}`);
+    assert.equal(inRound.length, 6, `round ${round}`);
+  }
+});
+
+test('nobody is scheduled twice in the same round', () => {
+  for (let round = 1; round <= 10; round += 1) {
+    const players = league.fixtures
+      .filter((f) => f.round === round)
+      .flatMap((f) => [f.p1, f.p2]);
+    assert.equal(new Set(players).size, players.length, `round ${round} double-books someone`);
   }
 });
 
@@ -63,9 +98,22 @@ test('fixtures only pair players from the same group', () => {
   }
 });
 
-test('with eight playoff matches the season totals fifty-eight', () => {
+test('with eight playoff matches the season totals sixty-eight', () => {
   assert.equal(league.playoffFixtures.length, 8);
-  assert.equal(league.fixtures.length + league.playoffFixtures.length, 58);
+  assert.equal(league.fixtures.length + league.playoffFixtures.length, 68);
+});
+
+test('the bracket names only slots the groups can actually fill', () => {
+  const sizes = Object.fromEntries(
+    Object.entries(league.groups).map(([name, ids]) => [name, ids.length]),
+  );
+  for (const slot of league.playoffFixtures.flatMap((f) => [f.slotP1, f.slotP2])) {
+    const group = /^([AB])([1-9])$/.exec(slot);
+    if (!group) continue;
+    const [, name, position] = group;
+    assert.ok(Number(position) <= sizes[name],
+      `${slot} needs group ${name} to have ${position} players, it has ${sizes[name]}`);
+  }
 });
 
 test('ten rounds run Monday to Friday from the season start', () => {

@@ -9,13 +9,20 @@ working.
 
 ## Format
 
-Eleven players in two groups (A: 6, B: 5), double round-robin inside each
-group, top four from Group A and top three from Group B advance, joined by
-the CEO as an eighth entrant who plays no group stage, into quarter-finals,
-semi-finals, final and third place. 58 matches total.
+Twelve players in two groups of six, double round-robin inside each group. The
+top three of each group advance, and the better of the two fourth-placed players
+takes a seventh place, joined by the CEO as an eighth entrant who plays no group
+stage — into quarter-finals, semi-finals, final and third place. 68 matches
+total.
 
 Best of 5 games to 11. Win 3 points, loss 0. Tiebreaks: head-to-head, then
 game difference, then games won, then a seeded draw.
+
+The two fourth-placed players never met, so head-to-head cannot separate them:
+that comparison is points, then game difference, then games won, then the same
+seeded draw. The quarter-finals are arranged so that no pairing can be a rematch
+— the cross-group qualifier is given the CEO, who belongs to no group — and so
+that the two group winners can only meet in the final.
 
 ## How it works
 

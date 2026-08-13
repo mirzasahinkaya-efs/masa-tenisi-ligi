@@ -99,19 +99,24 @@ test('a Slack-signed result is provenanced apart from a passphrase one', async (
   assert.equal(fake.state.league.results[0].reportedBy, 'slack:mirza');
 });
 
-test('a passphrase session cannot report a match it is not in', async () => {
-  // mirza is a season admin. Admin authority must not follow from knowing the
-  // shared passphrase, so this has to be refused even though the same player
-  // signed in through Slack could do it.
+test('being an admin does not let a passphrase session invent a pairing', async () => {
+  // mirza is a season admin. The opponent is chosen from the OTHER group on
+  // purpose: an earlier version of this test picked "the first fixture mirza is
+  // not in", which silently became a fixture mirza WAS in the moment the draw
+  // moved him, and passed for the wrong reason.
   const fake = fakeStore();
-  const other = base.fixtures.find((f) => f.p1 !== 'mirza' && f.p2 !== 'mirza');
+  const mine = Object.entries(base.groups).find(([, ids]) => ids.includes('mirza'))[0];
+  const theirs = Object.entries(base.groups).find(([name]) => name !== mine)[1];
+  assert.equal(theirs.includes('mirza'), false, 'premise: the opponent is cross-group');
+
   const response = await handleResultPost(
     await postAs(
-      { opponentId: other.p2, myGames: 3, theirGames: 1 }, await passphraseSession('mirza'),
+      { opponentId: theirs[0], myGames: 3, theirGames: 1 }, await passphraseSession('mirza'),
     ),
     env, deps(fake),
   );
-  assert.ok(response.status >= 400, `expected a refusal, got ${response.status}`);
+  assert.equal(response.status, 409);
+  assert.match((await response.json()).error, /different groups/);
   assert.equal(fake.state.league.results.length, 0);
 });
 

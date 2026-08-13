@@ -1,5 +1,5 @@
 import { computeTable } from './lib/standings.js';
-import { resolveBracket } from './lib/bracket.js';
+import { resolveBracket, bestFourthPlayerId, QUALIFY_PER_GROUP } from './lib/bracket.js';
 
 const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (character) => ({
   '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
@@ -87,7 +87,7 @@ function wireSectionNav() {
   setCurrent(sections[0].id);
 }
 
-function renderTable(elementId, rows, qualifyCount) {
+function renderTable(elementId, rows, bestFourth) {
   const started = rows.some((row) => row.played > 0);
 
   const head = `
@@ -95,8 +95,18 @@ function renderTable(elementId, rows, qualifyCount) {
       <th>#</th><th>Player</th><th>P</th><th>W</th><th>L</th><th>Diff</th><th>Pts</th>
     </tr></thead>`;
 
+  const classFor = (row) => {
+    if (!started) return '';
+    if (row.position <= QUALIFY_PER_GROUP) return 'qualifying';
+    // The fourth place currently holding the cross-group play-off slot. Marked
+    // differently because it is provisional in a way the top three are not: it
+    // can be taken by the other group's fourth without this player losing a
+    // single match.
+    return row.playerId === bestFourth ? 'qualifying qualifying--playoff' : '';
+  };
+
   const body = rows.map((row) => `
-    <tr class="${started && row.position <= qualifyCount ? 'qualifying' : ''}">
+    <tr class="${classFor(row)}">
       <td>${started ? row.position : '–'}</td>
       <td title="${esc(fullNameOf.get(row.playerId))}">${esc(nameOf.get(row.playerId))}</td>
       <td>${row.played}</td>
@@ -153,8 +163,11 @@ function renderCurrentRound() {
     fixtures.map((fixture) => fixtureLine(fixture)).join('') + overdueBlock;
 }
 
+const PLACEHOLDER_TEXT = { '@tugkan': 'CEO', BEST4: 'Best 4th' };
+
 function bracketSlot(playerId, placeholder, games, isWinner) {
-  const placeholderText = placeholder.startsWith('@') ? 'CEO' : placeholder;
+  const placeholderText = PLACEHOLDER_TEXT[placeholder]
+    ?? (placeholder.startsWith('@') ? 'CEO' : placeholder);
   // A resolved id with no name means the roster and the bracket have drifted
   // apart — show the placeholder rather than an empty slot, which would give a
   // reader no clue anything was wrong.
@@ -167,7 +180,9 @@ function bracketSlot(playerId, placeholder, games, isWinner) {
 }
 
 function renderBracket() {
-  const bracket = resolveBracket(tables, allFixtures, league.results);
+  const bracket = resolveBracket(tables, allFixtures, league.results, {
+    drawSeed: league.season.drawSeed,
+  });
   const phases = [...new Set(bracket.map((match) => match.phase))];
 
   document.getElementById('bracket').innerHTML = phases.map((phase) => {
@@ -205,10 +220,12 @@ function renderAllFixtures() {
 
 renderProgress();
 renderSeasonStrip();
-// Group A qualifies four and Group B three; the eighth bracket place is the
-// CEO, who plays no group stage.
-renderTable('group-a', tables.A, 4);
-renderTable('group-b', tables.B, 3);
+// Three qualify from each group. The seventh place goes to whichever fourth
+// place is stronger across the two, and the eighth is the CEO, who plays no
+// group stage.
+const bestFourth = bestFourthPlayerId(tables, league.season.drawSeed);
+renderTable('group-a', tables.A, bestFourth);
+renderTable('group-b', tables.B, bestFourth);
 renderCurrentRound();
 renderBracket();
 renderAllFixtures();

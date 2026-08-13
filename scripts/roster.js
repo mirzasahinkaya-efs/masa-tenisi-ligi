@@ -12,6 +12,10 @@ export const ROSTER = [
   { id: 'dogukan', name: 'Doğukan D.', short: 'Doğukan D.', slackId: 'U0B3Q4A63DL' },
   { id: 'emre-b', name: 'Emre B.', short: 'Emre B.', slackId: 'U0BE7QDL98B' },
   { id: 'tugberk', name: 'Tuğberk G.', short: 'Tuğberk G.', slackId: 'U0BEE57LQ90' },
+  // No Slack id: he is not in the tournament channel. Nothing depends on one —
+  // playerForSlackId refuses to match an absent identity, and the passphrase
+  // sign-in keys on the roster id — but he can never be an admin without it.
+  { id: 'ibrahim', name: 'İbrahim A.', short: 'İbrahim A.' },
   // Joins at the quarter-final as the eighth entrant and plays no group stage,
   // so the draw must exclude him — otherwise a twelfth player would reshuffle
   // the groups into 6 and 6.

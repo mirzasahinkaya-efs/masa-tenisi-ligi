@@ -100,6 +100,12 @@
       "status": "provisional"
     },
     {
+      "id": "ibrahim",
+      "name": "İbrahim A.",
+      "short": "İbrahim A.",
+      "status": "provisional"
+    },
+    {
       "id": "tugkan",
       "name": "Tuğkan T.",
       "short": "Tuğkan T.",
@@ -112,16 +118,17 @@
     "A": [
       "aytac",
       "defne",
-      "emre-b",
+      "mirza",
       "necmettin",
       "tolga",
       "tugberk"
     ],
     "B": [
       "dogukan",
+      "emre-b",
       "emre-k",
       "emre-y",
-      "mirza",
+      "ibrahim",
       "omer"
     ]
   },
@@ -199,7 +206,7 @@
       "stage": "group",
       "group": "A",
       "round": 1,
-      "p1": "emre-b",
+      "p1": "mirza",
       "p2": "necmettin"
     },
     {
@@ -224,7 +231,7 @@
       "group": "A",
       "round": 2,
       "p1": "defne",
-      "p2": "emre-b"
+      "p2": "mirza"
     },
     {
       "id": "A-R3-M1",
@@ -240,7 +247,7 @@
       "group": "A",
       "round": 3,
       "p1": "tolga",
-      "p2": "emre-b"
+      "p2": "mirza"
     },
     {
       "id": "A-R3-M3",
@@ -256,7 +263,7 @@
       "group": "A",
       "round": 4,
       "p1": "aytac",
-      "p2": "emre-b"
+      "p2": "mirza"
     },
     {
       "id": "A-R4-M2",
@@ -287,7 +294,7 @@
       "stage": "group",
       "group": "A",
       "round": 5,
-      "p1": "emre-b",
+      "p1": "mirza",
       "p2": "tugberk"
     },
     {
@@ -320,7 +327,7 @@
       "group": "A",
       "round": 6,
       "p1": "necmettin",
-      "p2": "emre-b"
+      "p2": "mirza"
     },
     {
       "id": "A-R7-M1",
@@ -343,7 +350,7 @@
       "stage": "group",
       "group": "A",
       "round": 7,
-      "p1": "emre-b",
+      "p1": "mirza",
       "p2": "defne"
     },
     {
@@ -359,7 +366,7 @@
       "stage": "group",
       "group": "A",
       "round": 8,
-      "p1": "emre-b",
+      "p1": "mirza",
       "p2": "tolga"
     },
     {
@@ -375,7 +382,7 @@
       "stage": "group",
       "group": "A",
       "round": 9,
-      "p1": "emre-b",
+      "p1": "mirza",
       "p2": "aytac"
     },
     {
@@ -408,7 +415,7 @@
       "group": "A",
       "round": 10,
       "p1": "tugberk",
-      "p2": "emre-b"
+      "p2": "mirza"
     },
     {
       "id": "A-R10-M3",
@@ -423,7 +430,7 @@
       "stage": "group",
       "group": "B",
       "round": 1,
-      "p1": "emre-k",
+      "p1": "dogukan",
       "p2": "omer"
     },
     {
@@ -431,8 +438,16 @@
       "stage": "group",
       "group": "B",
       "round": 1,
-      "p1": "emre-y",
-      "p2": "mirza"
+      "p1": "emre-b",
+      "p2": "ibrahim"
+    },
+    {
+      "id": "B-R1-M3",
+      "stage": "group",
+      "group": "B",
+      "round": 1,
+      "p1": "emre-k",
+      "p2": "emre-y"
     },
     {
       "id": "B-R2-M1",
@@ -440,15 +455,23 @@
       "group": "B",
       "round": 2,
       "p1": "dogukan",
-      "p2": "omer"
+      "p2": "ibrahim"
     },
     {
       "id": "B-R2-M2",
       "stage": "group",
       "group": "B",
       "round": 2,
-      "p1": "emre-k",
+      "p1": "omer",
       "p2": "emre-y"
+    },
+    {
+      "id": "B-R2-M3",
+      "stage": "group",
+      "group": "B",
+      "round": 2,
+      "p1": "emre-b",
+      "p2": "emre-k"
     },
     {
       "id": "B-R3-M1",
@@ -456,15 +479,23 @@
       "group": "B",
       "round": 3,
       "p1": "dogukan",
-      "p2": "mirza"
+      "p2": "emre-y"
     },
     {
       "id": "B-R3-M2",
       "stage": "group",
       "group": "B",
       "round": 3,
+      "p1": "ibrahim",
+      "p2": "emre-k"
+    },
+    {
+      "id": "B-R3-M3",
+      "stage": "group",
+      "group": "B",
+      "round": 3,
       "p1": "omer",
-      "p2": "emre-y"
+      "p2": "emre-b"
     },
     {
       "id": "B-R4-M1",
@@ -472,15 +503,23 @@
       "group": "B",
       "round": 4,
       "p1": "dogukan",
-      "p2": "emre-y"
+      "p2": "emre-k"
     },
     {
       "id": "B-R4-M2",
       "stage": "group",
       "group": "B",
       "round": 4,
-      "p1": "mirza",
-      "p2": "emre-k"
+      "p1": "emre-y",
+      "p2": "emre-b"
+    },
+    {
+      "id": "B-R4-M3",
+      "stage": "group",
+      "group": "B",
+      "round": 4,
+      "p1": "ibrahim",
+      "p2": "omer"
     },
     {
       "id": "B-R5-M1",
@@ -488,15 +527,23 @@
       "group": "B",
       "round": 5,
       "p1": "dogukan",
-      "p2": "emre-k"
+      "p2": "emre-b"
     },
     {
       "id": "B-R5-M2",
       "stage": "group",
       "group": "B",
       "round": 5,
-      "p1": "mirza",
+      "p1": "emre-k",
       "p2": "omer"
+    },
+    {
+      "id": "B-R5-M3",
+      "stage": "group",
+      "group": "B",
+      "round": 5,
+      "p1": "emre-y",
+      "p2": "ibrahim"
     },
     {
       "id": "B-R6-M1",
@@ -504,22 +551,30 @@
       "group": "B",
       "round": 6,
       "p1": "omer",
-      "p2": "emre-k"
+      "p2": "dogukan"
     },
     {
       "id": "B-R6-M2",
       "stage": "group",
       "group": "B",
       "round": 6,
-      "p1": "mirza",
-      "p2": "emre-y"
+      "p1": "ibrahim",
+      "p2": "emre-b"
+    },
+    {
+      "id": "B-R6-M3",
+      "stage": "group",
+      "group": "B",
+      "round": 6,
+      "p1": "emre-y",
+      "p2": "emre-k"
     },
     {
       "id": "B-R7-M1",
       "stage": "group",
       "group": "B",
       "round": 7,
-      "p1": "omer",
+      "p1": "ibrahim",
       "p2": "dogukan"
     },
     {
@@ -528,14 +583,22 @@
       "group": "B",
       "round": 7,
       "p1": "emre-y",
-      "p2": "emre-k"
+      "p2": "omer"
+    },
+    {
+      "id": "B-R7-M3",
+      "stage": "group",
+      "group": "B",
+      "round": 7,
+      "p1": "emre-k",
+      "p2": "emre-b"
     },
     {
       "id": "B-R8-M1",
       "stage": "group",
       "group": "B",
       "round": 8,
-      "p1": "mirza",
+      "p1": "emre-y",
       "p2": "dogukan"
     },
     {
@@ -543,7 +606,15 @@
       "stage": "group",
       "group": "B",
       "round": 8,
-      "p1": "emre-y",
+      "p1": "emre-k",
+      "p2": "ibrahim"
+    },
+    {
+      "id": "B-R8-M3",
+      "stage": "group",
+      "group": "B",
+      "round": 8,
+      "p1": "emre-b",
       "p2": "omer"
     },
     {
@@ -551,7 +622,7 @@
       "stage": "group",
       "group": "B",
       "round": 9,
-      "p1": "emre-y",
+      "p1": "emre-k",
       "p2": "dogukan"
     },
     {
@@ -559,15 +630,23 @@
       "stage": "group",
       "group": "B",
       "round": 9,
-      "p1": "emre-k",
-      "p2": "mirza"
+      "p1": "emre-b",
+      "p2": "emre-y"
+    },
+    {
+      "id": "B-R9-M3",
+      "stage": "group",
+      "group": "B",
+      "round": 9,
+      "p1": "omer",
+      "p2": "ibrahim"
     },
     {
       "id": "B-R10-M1",
       "stage": "group",
       "group": "B",
       "round": 10,
-      "p1": "emre-k",
+      "p1": "emre-b",
       "p2": "dogukan"
     },
     {
@@ -576,7 +655,15 @@
       "group": "B",
       "round": 10,
       "p1": "omer",
-      "p2": "mirza"
+      "p2": "emre-k"
+    },
+    {
+      "id": "B-R10-M3",
+      "stage": "group",
+      "group": "B",
+      "round": 10,
+      "p1": "ibrahim",
+      "p2": "emre-y"
     }
   ],
   "playoffFixtures": [
@@ -586,31 +673,31 @@
       "phase": "Quarter-finals",
       "label": "Quarter-final 1",
       "slotP1": "A1",
-      "slotP2": "@tugkan"
+      "slotP2": "B3"
     },
     {
       "id": "QF2",
       "stage": "playoff",
       "phase": "Quarter-finals",
       "label": "Quarter-final 2",
-      "slotP1": "B2",
-      "slotP2": "A3"
+      "slotP1": "@tugkan",
+      "slotP2": "BEST4"
     },
     {
       "id": "QF3",
       "stage": "playoff",
       "phase": "Quarter-finals",
       "label": "Quarter-final 3",
-      "slotP1": "A2",
-      "slotP2": "B3"
+      "slotP1": "B1",
+      "slotP2": "A3"
     },
     {
       "id": "QF4",
       "stage": "playoff",
       "phase": "Quarter-finals",
       "label": "Quarter-final 4",
-      "slotP1": "B1",
-      "slotP2": "A4"
+      "slotP1": "A2",
+      "slotP2": "B2"
     },
     {
       "id": "SF1",

@@ -130,6 +130,9 @@ main > section { scroll-margin-top: 56px; }
   font-weight: 500; color: var(--text-strong); width: 99%;
 }
 .table tbody tr.qualifying { background: var(--surface-2); box-shadow: inset 3px 0 0 var(--green); }
+/* The cross-group play-off place: qualifying for now, but holdable only until
+   the other group's fourth outscores them — so it reads as provisional. */
+.table tbody tr.qualifying--playoff { box-shadow: inset 3px 0 0 var(--blue); }
 /* Applied to the cells, so it layers over a qualifying row instead of fighting it. */
 .table tbody tr:hover td { background: rgba(255, 255, 255, .04); }
 .table .pts { color: var(--text-strong); font-weight: 500; }
