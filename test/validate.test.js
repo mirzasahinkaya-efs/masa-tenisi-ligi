@@ -1,7 +1,9 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
-import { matchFormatLabel, parseScore } from '../lib/validate.js';
+import {
+  gamesToWinFor, matchFormatLabel, maxGamesToWin, parseScore,
+} from '../lib/validate.js';
 
 const BEST_OF_3 = { gamesToWin: 2 };
 const BEST_OF_5 = { gamesToWin: 3 };
@@ -62,12 +64,37 @@ test('the format label describes the rule it is given', () => {
   assert.equal(matchFormatLabel(3), 'best-of-5');
 });
 
-test('the league file and its label agree with each other', async () => {
+test('the rule is looked up by stage, and an unknown stage gets no answer', () => {
+  const rules = { gamesToWin: { group: 2, playoff: 3 } };
+  assert.equal(gamesToWinFor(rules, 'group'), 2);
+  assert.equal(gamesToWinFor(rules, 'playoff'), 3);
+  // No fallback on purpose: guessing here would validate a playoff result
+  // against the group rule, which is the bug this shape exists to prevent.
+  for (const stage of ['final', '', undefined, 'GROUP']) {
+    assert.equal(gamesToWinFor(rules, stage), undefined, String(stage));
+  }
+  assert.equal(gamesToWinFor(undefined, 'group'), undefined);
+  assert.equal(gamesToWinFor({}, 'group'), undefined);
+});
+
+test('the widest format is what the form offers', () => {
+  assert.equal(maxGamesToWin({ gamesToWin: { group: 2, playoff: 3 } }), 3);
+  assert.equal(maxGamesToWin({ gamesToWin: { group: 2 } }), 2);
+  assert.equal(maxGamesToWin({ gamesToWin: {} }), 0);
+  assert.equal(maxGamesToWin({}), 0);
+  assert.equal(maxGamesToWin(undefined), 0);
+});
+
+test('the league file and its labels agree with each other', async () => {
   // Two fields describing one rule can drift; this is the only thing stopping
   // league.json claiming best-of-5 while every path enforces best-of-3.
   const league = JSON.parse(
     await readFile(new URL('../data/league.json', import.meta.url), 'utf8'),
   );
-  assert.equal(league.rules.gamesToWin, 2);
-  assert.equal(league.rules.matchFormat, matchFormatLabel(league.rules.gamesToWin));
+  assert.deepEqual(Object.keys(league.rules.gamesToWin).sort(), ['group', 'playoff']);
+  assert.equal(league.rules.gamesToWin.group, 2);
+  assert.equal(league.rules.gamesToWin.playoff, 3);
+  for (const [stage, games] of Object.entries(league.rules.gamesToWin)) {
+    assert.equal(league.rules.matchFormat[stage], matchFormatLabel(games), stage);
+  }
 });

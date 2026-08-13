@@ -2,6 +2,8 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { handleResultPost } from '../functions/api/results.js';
+import { computeTable } from '../lib/standings.js';
+import { bestFourthPlayerId } from '../lib/bracket.js';
 import { signToken } from '../lib/session.js';
 import { SESSION_COOKIE } from '../functions/_shared/http.js';
 
@@ -252,6 +254,119 @@ test('a body that is valid JSON but not an object is refused', async () => {
     assert.equal(response.status, 400, `body ${raw}`);
   }
   assert.equal(fake.state.commits.length, 0);
+});
+
+// --- the two stages are played to different lengths ---
+
+/** Every group fixture decided in favour of whoever sorts first. */
+const groupsFinished = (league) => league.fixtures.map((f) => ({
+  fixtureId: f.id,
+  p1Games: f.p1 < f.p2 ? 2 : 0,
+  p2Games: f.p1 < f.p2 ? 0 : 2,
+  reportedBy: 'seed',
+  reportedAt: '2026-10-23T00:00:00Z',
+}));
+
+test('a playoff result is judged as best-of-five, not by the group rule', async () => {
+  // The API's playoff path is reachable: handleResultPost takes whatever
+  // opponentId it is given, so a quarter-final can be filed even though the web
+  // form's dropdown only ever offers same-group opponents.
+  const league = structuredClone(base);
+  league.results = groupsFinished(league);
+  const tables = Object.fromEntries(Object.entries(league.groups).map(([name, ids]) => [
+    name, computeTable(ids, league.fixtures, league.results, league.rules, league.season.drawSeed),
+  ]));
+  const opponentId = bestFourthPlayerId(tables, league.season.drawSeed);
+
+  const send = async (myGames, theirGames) => {
+    const fake = fakeStore(structuredClone(league));
+    const response = await handleResultPost(
+      await postAs({ opponentId, myGames, theirGames }, await passphraseSession('tugkan')),
+      env, deps(fake),
+    );
+    return { response, fake };
+  };
+
+  // 2-1 wins a group match but cannot win a playoff one.
+  const short = await send(2, 1);
+  assert.equal(short.response.status, 400);
+  assert.match((await short.response.json()).error, /best-of-5/);
+  assert.equal(short.fake.state.commits.length, 0);
+
+  const proper = await send(3, 1);
+  assert.equal(proper.response.status, 200, JSON.stringify(await proper.response.json()));
+  const stored = proper.fake.state.league.results.at(-1);
+  assert.equal(stored.fixtureId, 'QF2');
+  assert.deepEqual([stored.p1Games, stored.p2Games].sort(), [1, 3]);
+});
+
+test('a group result is still judged as best-of-three', async () => {
+  // The playoff rule must not leak backwards onto group fixtures.
+  const league = structuredClone(base);
+  const pair = league.fixtures.filter((f) => [f.p1, f.p2].includes('mirza'));
+  const opponentId = pair[0].p1 === 'mirza' ? pair[0].p2 : pair[0].p1;
+
+  const fake = fakeStore(structuredClone(league));
+  const response = await handleResultPost(
+    await post({ opponentId, myGames: 3, theirGames: 1 }, slackOf('mirza')), env, deps(fake),
+  );
+  assert.equal(response.status, 400);
+  assert.match((await response.json()).error, /best-of-3/);
+});
+
+test('a fixture that changes stage under a race is refused, not stored', async () => {
+  /*
+   * The narrow window the stage guard exists for. A2 and A3 share a group AND
+   * meet again in SF2 (W-QF3 v W-QF4, which A3 and A2 win below), so:
+   *
+   *   outer read  -> their second group meeting is open       -> best-of-3
+   *   in the gap  -> someone records it, finishing the groups -> SF2 resolves
+   *   inner read  -> their next open fixture is SF2           -> best-of-5
+   *
+   * The 2-1 approved against the group rule is not legal for SF2, so it must be
+   * refused rather than written to a fixture that could not have produced it.
+   */
+  const league = structuredClone(base);
+  const finished = groupsFinished(league);
+  const tableA = computeTable(
+    league.groups.A, league.fixtures, finished, league.rules, league.season.drawSeed,
+  );
+  const [a2, a3] = [tableA[1].playerId, tableA[2].playerId];
+
+  const between = league.fixtures.filter(
+    (f) => [f.p1, f.p2].sort().join() === [a2, a3].sort().join(),
+  );
+  assert.equal(between.length, 2, 'premise: they meet twice in the group');
+
+  // Everything finished EXCEPT their second meeting, so the outer lookup still
+  // finds a group fixture.
+  const held = between[1];
+  league.results = finished.filter((r) => r.fixtureId !== held.id);
+
+  const store = {
+    read: async () => ({ league: structuredClone(league), sha: 's' }),
+    update: async (mutate) => {
+      const raced = structuredClone(league);
+      raced.results.push(finished.find((r) => r.fixtureId === held.id));
+      // QF3 and QF4 decided so A3 and A2 advance, which pairs them in SF2.
+      raced.results.push(
+        { fixtureId: 'QF3', p1Games: 0, p2Games: 3, reportedBy: 'seed', reportedAt: 'x' },
+        { fixtureId: 'QF4', p1Games: 3, p2Games: 0, reportedBy: 'seed', reportedAt: 'x' },
+      );
+      try {
+        mutate(raced);
+      } catch (error) {
+        return { ok: false, error: 'REJECTED', reason: error.message };
+      }
+      return { ok: true, league: raced };
+    },
+  };
+
+  const response = await handleResultPost(
+    await postAs({ opponentId: a3, myGames: 2, theirGames: 1 }, await passphraseSession(a2)),
+    env, { nowSeconds: () => NOW, makeStore: () => store },
+  );
+  assert.equal(response.status, 409);
 });
 
 test('a match recorded by someone else in the gap is refused, not double-recorded', async () => {

@@ -10,8 +10,14 @@
     "drawLocked": false
   },
   "rules": {
-    "matchFormat": "best-of-3",
-    "gamesToWin": 2,
+    "gamesToWin": {
+      "group": 2,
+      "playoff": 3
+    },
+    "matchFormat": {
+      "group": "best-of-3",
+      "playoff": "best-of-5"
+    },
     "gameTarget": 11,
     "pointsWin": 3,
     "pointsLoss": 0,

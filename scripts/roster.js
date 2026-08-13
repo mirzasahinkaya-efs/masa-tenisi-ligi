@@ -31,10 +31,17 @@ export const SEASON = {
 };
 
 export const RULES = {
-  matchFormat: 'best-of-3',
-  // The load-bearing one: everything that validates a score reads this, so the
-  // format is defined here and nowhere else. `matchFormat` above is the label.
-  gamesToWin: 2,
+  /*
+   * Keyed by `fixture.stage`, which every fixture already carries. Short matches
+   * in the groups keep 60 of them manageable; the eight that decide the title are
+   * played properly.
+   *
+   * `gamesToWin` is the load-bearing half — everything that validates a score
+   * reads it, so the format is defined here and nowhere else. `matchFormat` is
+   * the label, and a test pins the two to each other.
+   */
+  gamesToWin: { group: 2, playoff: 3 },
+  matchFormat: { group: 'best-of-3', playoff: 'best-of-5' },
   gameTarget: 11,
   pointsWin: 3,
   pointsLoss: 0,

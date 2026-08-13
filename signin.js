@@ -1,4 +1,5 @@
 import { chooseSigninState, panelUsable } from './lib/signin-state.js';
+import { maxGamesToWin } from './lib/validate.js';
 
 const league = await fetch('./data/league.json', { cache: 'no-store' }).then((r) => r.json());
 const nameOf = new Map(league.players.map((player) => [player.id, player.short]));
@@ -20,12 +21,14 @@ const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (character) => ({
 }[character]));
 
 /**
- * Options 0..gamesToWin, read from the league rather than hardcoded — otherwise
- * changing the match format would leave the form offering a score the API then
- * rejects, with no clue why.
+ * Options 0..the longest format any stage uses, read from the league rather than
+ * hardcoded. The form cannot know which fixture a submission will land on until
+ * the API resolves it, and the group stage and playoffs are played to different
+ * lengths — so offering the widest range keeps a legal score from being
+ * unselectable, and the API remains the one authority on what is legal.
  */
 function fillGames(id) {
-  const most = league.rules?.gamesToWin ?? 0;
+  const most = maxGamesToWin(league.rules);
   document.getElementById(id).innerHTML = Array.from({ length: most + 1 }, (_, n) => n)
     .map((n) => `<option value="${n}">${n}</option>`).join('');
 }

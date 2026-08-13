@@ -1,7 +1,7 @@
 import { verifyToken } from '../../lib/session.js';
 import { canReport, playerForSubject } from '../../lib/auth.js';
 import { findOpenFixture, orientResult, playableFixtures } from '../../lib/report.js';
-import { matchFormatLabel, parseScore } from '../../lib/validate.js';
+import { gamesToWinFor, matchFormatLabel, parseScore } from '../../lib/validate.js';
 import { createStore } from '../_shared/store.js';
 import { json, readCookie, SESSION_COOKIE } from '../_shared/http.js';
 
@@ -36,22 +36,6 @@ export async function handleResultPost(request, env, deps = {}) {
     return json({ error: 'Could not reach the league data. Please try again.' }, { status: 502 });
   }
 
-  // Validated after the read, because the match format is a league rule rather
-  // than a constant in this file. The caller is already authenticated, so the one
-  // wasted read on a malformed score is not worth a second definition of the rule.
-  const gamesToWin = league.rules?.gamesToWin;
-  const score = parseScore(`${body.myGames}-${body.theirGames}`, { gamesToWin });
-  if (!score.ok) {
-    if (score.error === 'NO_RULE') {
-      return json({ error: 'The league rules are incomplete. Please tell an admin.' }, { status: 503 });
-    }
-    return json({
-      error: score.error === 'FORMAT'
-        ? 'Scores must be whole numbers, for example 2 and 1.'
-        : `A ${matchFormatLabel(gamesToWin)} match ends when the winner has exactly ${gamesToWin} games.`,
-    }, { status: 400 });
-  }
-
   const reporter = playerForSubject(league, session.payload);
   if (!reporter) {
     return json({ error: 'You are not on the league roster.' }, { status: 403 });
@@ -82,6 +66,25 @@ export async function handleResultPost(request, env, deps = {}) {
     return json({ error: 'You can only record your own matches.' }, { status: 403 });
   }
 
+  // The score can only be judged now: the group stage and the playoffs are played
+  // to different lengths, so the legal scores depend on which fixture this is.
+  const stage = open.fixture.stage;
+  const gamesToWin = gamesToWinFor(league.rules, stage);
+  const score = parseScore(`${body.myGames}-${body.theirGames}`, { gamesToWin });
+  if (!score.ok) {
+    if (score.error === 'NO_RULE') {
+      return json({
+        error: `The league rules say nothing about ${stage} matches. Please tell an admin.`,
+      }, { status: 503 });
+    }
+    return json({
+      error: score.error === 'FORMAT'
+        ? 'Scores must be whole numbers, for example 2 and 1.'
+        : `A ${matchFormatLabel(gamesToWin)} match ends when the winner has exactly `
+          + `${gamesToWin} games.`,
+    }, { status: 400 });
+  }
+
   let committedFixtureId;
   let committedRound;
   let meetingIndex;
@@ -89,6 +92,12 @@ export async function handleResultPost(request, env, deps = {}) {
   const committed = await store.update((current) => {
     const fresh = findOpenFixture(current, reporter.id, body.opponentId);
     if (!fresh.ok) throw new Error('ALREADY_RECORDED');
+    // The score above was judged against `stage`. If the pair's next open fixture
+    // changed stage while we were reading — someone else filing both of their
+    // group meetings promotes the pair to their playoff match, which is played to
+    // a different length — then the score we approved is not one this fixture
+    // allows. Refuse rather than store a result that could not have happened.
+    if (fresh.fixture.stage !== stage) throw new Error('STAGE_CHANGED');
 
     const bothFixtureIds = playableFixtures(current)
       .filter((f) => [f.p1, f.p2].sort().join() === [reporter.id, body.opponentId].sort().join())

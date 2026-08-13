@@ -1,12 +1,15 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
-import { parseScore } from '../lib/validate.js';
+import { gamesToWinFor, parseScore } from '../lib/validate.js';
 import { ROSTER, SEASON, RULES } from '../scripts/roster.js';
 
 const league = JSON.parse(
   await readFile(new URL('../data/league.json', import.meta.url), 'utf8'),
 );
+
+/** Group and playoff fixtures together, since each carries the stage it belongs to. */
+const allFixtures = [...league.fixtures, ...league.playoffFixtures];
 
 test('the committed league file has not drifted from the roster it was generated from', () => {
   // scripts/roster.js is only the SOURCE; data/league.json is what ships and what
@@ -167,7 +170,7 @@ test('the committed draw seed is the season seed', () => {
 });
 
 test('every result names a known fixture exactly once with a legal score', () => {
-  const known = new Set([...league.fixtures, ...league.playoffFixtures].map((f) => f.id));
+  const known = new Set(allFixtures.map((f) => f.id));
   const seen = new Set();
 
   for (const result of league.results) {
@@ -175,22 +178,37 @@ test('every result names a known fixture exactly once with a legal score', () =>
     assert.equal(seen.has(result.fixtureId), false, `duplicate result: ${result.fixtureId}`);
     seen.add(result.fixtureId);
 
+    // Judged against the format of the stage the fixture belongs to — a playoff
+    // result checked against the group rule would be wrongly called illegal.
+    const fixture = allFixtures.find((f) => f.id === result.fixtureId);
     const parsed = parseScore(`${result.p1Games}-${result.p2Games}`, {
-      gamesToWin: league.rules.gamesToWin,
+      gamesToWin: gamesToWinFor(league.rules, fixture.stage),
     });
-    assert.equal(parsed.ok, true, `illegal score for ${result.fixtureId}`);
+    assert.equal(parsed.ok, true, `illegal score for ${result.fixtureId} (${fixture.stage})`);
   }
 
   assert.ok(league.results.length <= known.size, 'more results than fixtures');
 });
 
-test('the league rule is one that actually judges scores', () => {
+test('every stage in the fixture list has a rule that actually judges scores', () => {
   // The loop above is dormant while no results are recorded, so on its own it
-  // would keep passing even if the rule it validates against were unusable.
-  // These two assertions are what make the check above mean something today.
-  const { gamesToWin } = league.rules;
-  assert.equal(parseScore(`${gamesToWin}-0`, { gamesToWin }).ok, true);
-  assert.equal(parseScore(`${gamesToWin}-${gamesToWin}`, { gamesToWin }).ok, false);
+  // would keep passing even if the rules it validates against were unusable. This
+  // is what makes that check mean something today — and it covers every stage the
+  // data actually contains, so adding a stage without a rule fails here.
+  const stages = new Set(allFixtures.map((f) => f.stage));
+  assert.deepEqual([...stages].sort(), ['group', 'playoff']);
+
+  for (const stage of stages) {
+    const gamesToWin = gamesToWinFor(league.rules, stage);
+    assert.ok(Number.isInteger(gamesToWin), `no rule for stage "${stage}"`);
+    assert.equal(parseScore(`${gamesToWin}-0`, { gamesToWin }).ok, true, stage);
+    assert.equal(parseScore(`${gamesToWin}-${gamesToWin}`, { gamesToWin }).ok, false, stage);
+  }
+
+  // And the two stages really are played differently, which is the point.
+  assert.notEqual(
+    gamesToWinFor(league.rules, 'group'), gamesToWinFor(league.rules, 'playoff'),
+  );
 });
 
 test('no derived standings are stored anywhere in the file', () => {
