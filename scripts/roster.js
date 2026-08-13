@@ -17,8 +17,8 @@ export const ROSTER = [
   // sign-in keys on the roster id — but he can never be an admin without it.
   { id: 'ibrahim', name: 'İbrahim A.', short: 'İbrahim A.' },
   // Joins at the quarter-final as the eighth entrant and plays no group stage,
-  // so the draw must exclude him — otherwise a twelfth player would reshuffle
-  // the groups into 6 and 6.
+  // so the draw must exclude him — the twelve group-stage players below are what
+  // make the groups 6 and 6, and counting him would leave 7 and 6.
   { id: 'tugkan', name: 'Tuğkan T.', short: 'Tuğkan T.', slackId: 'U094H3DBEUW', groupStage: false },
 ];
 

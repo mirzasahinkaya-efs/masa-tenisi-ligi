@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { generateGroupFixtures } from '../lib/schedule.js';
+import { computeTable } from '../lib/standings.js';
 import {
   resolvePlayer,
   playableFixtures,
@@ -129,6 +130,83 @@ test('findOpenFixture reports NO_PAIRING for players in different groups with no
   assert.equal(result.ok, false);
   assert.equal(result.error, 'NO_PAIRING');
   assert.deepEqual(result.played, []);
+});
+
+// --- the cross-group fourth place, reached the way the CLI and API reach it ---
+
+/*
+ * A separate four-per-group league. The fixture above has three players per
+ * group, so there is no fourth place at all and BEST4 can never resolve — which
+ * made the "omits playoff fixtures" test above pass for a reason unrelated to
+ * what it checks, and left this whole path uncovered.
+ *
+ * Seed 1 is deliberate: with both fourths dead level it makes the seeded draw
+ * pick b4 where plain id order would pick a4. So a caller that resolves the
+ * bracket without passing drawSeed gets a different answer, and these tests say so.
+ */
+const PLAYOFF_SEED = 1;
+const bigGroups = { A: ['a1', 'a2', 'a3', 'a4'], B: ['b1', 'b2', 'b3', 'b4'] };
+const bigFixtures = [
+  ...generateGroupFixtures('A', bigGroups.A),
+  ...generateGroupFixtures('B', bigGroups.B),
+];
+const bigLeague = (results) => ({
+  season: { drawSeed: PLAYOFF_SEED },
+  rules: RULES,
+  players: [...bigGroups.A, ...bigGroups.B].map((id) => ({ id, name: id, short: id })),
+  groups: bigGroups,
+  fixtures: bigFixtures,
+  results,
+});
+/** Every group match decided in favour of whoever sorts first, so both fourths tie. */
+const allGroupsPlayed = () => bigFixtures.map((f) => ({
+  fixtureId: f.id,
+  p1Games: f.p1 < f.p2 ? 3 : 0,
+  p2Games: f.p1 < f.p2 ? 0 : 3,
+}));
+
+test('the two fourth places really are dead level in this fixture', () => {
+  // The premise the seed choice below depends on. Without a genuine tie the
+  // draw is never consulted and the seed would not matter.
+  const results = allGroupsPlayed();
+  const [a4, b4] = ['A', 'B'].map(
+    (name) => computeTable(bigGroups[name], bigFixtures, results, RULES, PLAYOFF_SEED)[3],
+  );
+  assert.equal(a4.playerId, 'a4');
+  assert.equal(b4.playerId, 'b4');
+  for (const key of ['points', 'gameDiff', 'gamesWon']) {
+    assert.equal(a4[key], b4[key], key);
+  }
+});
+
+test('playoff fixtures become playable once both groups are complete', () => {
+  const before = playableFixtures(bigLeague([]));
+  assert.equal(before.some((f) => f.stage === 'playoff'), false);
+
+  const list = playableFixtures(bigLeague(allGroupsPlayed()));
+  const playoff = list.filter((f) => f.stage === 'playoff').map((f) => f.id).sort();
+  assert.deepEqual(playoff, ['QF1', 'QF2', 'QF3', 'QF4'],
+    'the quarter-finals resolve; later rounds wait on their results');
+});
+
+test('the playable bracket names the seed\'s best fourth, not the alphabetical one', () => {
+  const league = bigLeague(allGroupsPlayed());
+  const qf2 = playableFixtures(league).find((f) => f.id === 'QF2');
+  assert.ok(qf2, 'QF2 should be playable');
+  assert.equal(qf2.p1, 'tugkan');
+  assert.equal(qf2.p2, 'b4', 'resolved without the draw seed, this would be a4');
+});
+
+test('the best fourth can actually be given a result through findOpenFixture', () => {
+  const league = bigLeague(allGroupsPlayed());
+  const result = findOpenFixture(league, 'tugkan', 'b4');
+  assert.equal(result.ok, true);
+  assert.equal(result.fixture.id, 'QF2');
+
+  // And the fourth place who lost the comparison has no playoff match at all.
+  const excluded = findOpenFixture(league, 'tugkan', 'a4');
+  assert.equal(excluded.ok, false);
+  assert.equal(excluded.error, 'NO_PAIRING');
 });
 
 test('orientResult places the reporter\'s games on their own slot', () => {

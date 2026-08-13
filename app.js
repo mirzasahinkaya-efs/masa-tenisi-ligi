@@ -163,9 +163,11 @@ function renderCurrentRound() {
     fixtures.map((fixture) => fixtureLine(fixture)).join('') + overdueBlock;
 }
 
-const PLACEHOLDER_TEXT = { '@tugkan': 'CEO', BEST4: 'Best 4th' };
+const PLACEHOLDER_TEXT = { BEST4: 'Best 4th' };
 
 function bracketSlot(playerId, placeholder, games, isWinner) {
+  // Any `@id` slot is the fixed entrant, read generically so it keeps working if
+  // the CEO is ever a different person.
   const placeholderText = PLACEHOLDER_TEXT[placeholder]
     ?? (placeholder.startsWith('@') ? 'CEO' : placeholder);
   // A resolved id with no name means the roster and the bracket have drifted

@@ -130,6 +130,11 @@ function groupOf(playerId) {
 
 function printStandingsRow(playerId) {
   const groupName = groupOf(playerId);
+  // The CEO plays no group stage, so he has no table row to print. Without this
+  // the result is written and then the script throws on the way out, which
+  // leaves the operator staring at a stack trace and no commit hint.
+  if (!groupName) return;
+
   const table = computeTable(
     league.groups[groupName],
     league.fixtures,

@@ -49,9 +49,10 @@ html { scroll-behavior: smooth; }
 
 /*
  * Season strip: one tick per match, in playing order, filling as results are
- * recorded. 58 is this league's own number, so the strip is a record of this
- * season rather than a generic progress bar. Decorative — the adjacent
- * "n/58 matches played" text carries the same information for screen readers.
+ * recorded. The count comes from the fixture list rather than a constant, so the
+ * strip is a record of this season rather than a generic progress bar — 68
+ * today. Decorative: the adjacent "n/68 matches played" text carries the same
+ * information for screen readers.
  */
 .season-strip { display: flex; gap: 2px; }
 .season-strip .tick {
