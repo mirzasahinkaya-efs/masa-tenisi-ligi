@@ -22,8 +22,8 @@ const completeAllGroups = () => fixtures
   .filter((f) => f.stage === 'group')
   .map((f) => ({
     fixtureId: f.id,
-    p1Games: f.p1 < f.p2 ? 3 : 0,
-    p2Games: f.p1 < f.p2 ? 0 : 3,
+    p1Games: f.p1 < f.p2 ? 2 : 0,
+    p2Games: f.p1 < f.p2 ? 0 : 2,
   }));
 
 const tablesFrom = (results) => ({
@@ -220,10 +220,10 @@ test('quarter-final winners advance to the semi-finals', () => {
   const seeded = byId(resolve(tables, fixtures, groupResults));
 
   const results = [...groupResults,
-    { fixtureId: 'QF1', p1Games: 3, p2Games: 1 },   // QF1 p1 wins
-    { fixtureId: 'QF2', p1Games: 1, p2Games: 3 },   // QF2 p2 wins
-    { fixtureId: 'QF3', p1Games: 3, p2Games: 0 },   // QF3 p1 wins
-    { fixtureId: 'QF4', p1Games: 0, p2Games: 3 },   // QF4 p2 wins
+    { fixtureId: 'QF1', p1Games: 2, p2Games: 1 },   // QF1 p1 wins
+    { fixtureId: 'QF2', p1Games: 1, p2Games: 2 },   // QF2 p2 wins
+    { fixtureId: 'QF3', p1Games: 2, p2Games: 0 },   // QF3 p1 wins
+    { fixtureId: 'QF4', p1Games: 0, p2Games: 2 },   // QF4 p2 wins
   ];
   const bracket = byId(resolve(tables, fixtures, results));
   assert.deepEqual([bracket.SF1.p1, bracket.SF1.p2], [seeded.QF1.p1, seeded.QF2.p2]);
@@ -234,16 +234,16 @@ test('the final and third place resolve two rounds deep', () => {
   const groupResults = completeAllGroups();
   const tables = tablesFrom(groupResults);
   const withQfs = [...groupResults,
-    { fixtureId: 'QF1', p1Games: 3, p2Games: 1 },
-    { fixtureId: 'QF2', p1Games: 3, p2Games: 1 },
-    { fixtureId: 'QF3', p1Games: 3, p2Games: 1 },
-    { fixtureId: 'QF4', p1Games: 3, p2Games: 1 },
+    { fixtureId: 'QF1', p1Games: 2, p2Games: 1 },
+    { fixtureId: 'QF2', p1Games: 2, p2Games: 1 },
+    { fixtureId: 'QF3', p1Games: 2, p2Games: 1 },
+    { fixtureId: 'QF4', p1Games: 2, p2Games: 1 },
   ];
   const semis = byId(resolve(tables, fixtures, withQfs));
 
   const results = [...withQfs,
-    { fixtureId: 'SF1', p1Games: 3, p2Games: 2 },   // SF1 p1 wins
-    { fixtureId: 'SF2', p1Games: 2, p2Games: 3 },   // SF2 p2 wins
+    { fixtureId: 'SF1', p1Games: 2, p2Games: 1 },   // SF1 p1 wins
+    { fixtureId: 'SF2', p1Games: 1, p2Games: 2 },   // SF2 p2 wins
   ];
   const bracket = byId(resolve(tables, fixtures, results));
   assert.deepEqual([bracket.FINAL.p1, bracket.FINAL.p2], [semis.SF1.p1, semis.SF2.p2]);
@@ -251,9 +251,9 @@ test('the final and third place resolve two rounds deep', () => {
 });
 
 test('a played playoff match carries its result', () => {
-  const results = [...completeAllGroups(), { fixtureId: 'QF1', p1Games: 3, p2Games: 0 }];
+  const results = [...completeAllGroups(), { fixtureId: 'QF1', p1Games: 2, p2Games: 0 }];
   const bracket = byId(resolve(tablesFrom(results), fixtures, results));
-  assert.deepEqual(bracket.QF1.result, { fixtureId: 'QF1', p1Games: 3, p2Games: 0 });
+  assert.deepEqual(bracket.QF1.result, { fixtureId: 'QF1', p1Games: 2, p2Games: 0 });
 });
 
 // --- the cross-group fourth place, in isolation ---
@@ -325,7 +325,7 @@ test('a group with no fourth place leaves the slot empty', () => {
 
 test('a semi-final result with unresolved players does not resolve downstream', () => {
   // A stray SF result before the groups finish must not invent a finalist.
-  const results = [{ fixtureId: 'SF1', p1Games: 3, p2Games: 0 }];
+  const results = [{ fixtureId: 'SF1', p1Games: 2, p2Games: 0 }];
   const bracket = byId(resolve(tablesFrom(results), fixtures, results));
   assert.equal(bracket.FINAL.p1, null);
 });

@@ -19,8 +19,14 @@ const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (character) => ({
   '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
 }[character]));
 
+/**
+ * Options 0..gamesToWin, read from the league rather than hardcoded — otherwise
+ * changing the match format would leave the form offering a score the API then
+ * rejects, with no clue why.
+ */
 function fillGames(id) {
-  document.getElementById(id).innerHTML = [0, 1, 2, 3]
+  const most = league.rules?.gamesToWin ?? 0;
+  document.getElementById(id).innerHTML = Array.from({ length: most + 1 }, (_, n) => n)
     .map((n) => `<option value="${n}">${n}</option>`).join('');
 }
 

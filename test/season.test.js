@@ -2,10 +2,30 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { parseScore } from '../lib/validate.js';
+import { ROSTER, SEASON, RULES } from '../scripts/roster.js';
 
 const league = JSON.parse(
   await readFile(new URL('../data/league.json', import.meta.url), 'utf8'),
 );
+
+test('the committed league file has not drifted from the roster it was generated from', () => {
+  // scripts/roster.js is only the SOURCE; data/league.json is what ships and what
+  // every runtime path reads. Editing the roster without re-running `npm run
+  // generate` leaves the two disagreeing, and nothing else would notice.
+  assert.deepEqual(league.rules, RULES);
+  assert.deepEqual(
+    league.players.map((p) => p.id).sort(),
+    ROSTER.map((p) => p.id).sort(),
+  );
+  assert.equal(league.season.drawSeed, SEASON.drawSeed);
+  assert.equal(league.season.startDate, SEASON.startDate);
+  for (const source of ROSTER) {
+    const shipped = league.players.find((p) => p.id === source.id);
+    assert.equal(shipped.short, source.short, source.id);
+    assert.equal(shipped.slackId, source.slackId, source.id);
+    assert.equal(shipped.groupStage, source.groupStage, source.id);
+  }
+});
 
 test('players have unique ids and short names', () => {
   const count = league.players.length;
@@ -137,11 +157,22 @@ test('every result names a known fixture exactly once with a legal score', () =>
     assert.equal(seen.has(result.fixtureId), false, `duplicate result: ${result.fixtureId}`);
     seen.add(result.fixtureId);
 
-    const parsed = parseScore(`${result.p1Games}-${result.p2Games}`);
+    const parsed = parseScore(`${result.p1Games}-${result.p2Games}`, {
+      gamesToWin: league.rules.gamesToWin,
+    });
     assert.equal(parsed.ok, true, `illegal score for ${result.fixtureId}`);
   }
 
   assert.ok(league.results.length <= known.size, 'more results than fixtures');
+});
+
+test('the league rule is one that actually judges scores', () => {
+  // The loop above is dormant while no results are recorded, so on its own it
+  // would keep passing even if the rule it validates against were unusable.
+  // These two assertions are what make the check above mean something today.
+  const { gamesToWin } = league.rules;
+  assert.equal(parseScore(`${gamesToWin}-0`, { gamesToWin }).ok, true);
+  assert.equal(parseScore(`${gamesToWin}-${gamesToWin}`, { gamesToWin }).ok, false);
 });
 
 test('no derived standings are stored anywhere in the file', () => {

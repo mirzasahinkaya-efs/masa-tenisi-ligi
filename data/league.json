@@ -10,7 +10,8 @@
     "drawLocked": false
   },
   "rules": {
-    "matchFormat": "best-of-5",
+    "matchFormat": "best-of-3",
+    "gamesToWin": 2,
     "gameTarget": 11,
     "pointsWin": 3,
     "pointsLoss": 0,

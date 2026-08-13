@@ -1,5 +1,5 @@
 import { readFile, writeFile } from 'node:fs/promises';
-import { parseScore } from '../lib/validate.js';
+import { matchFormatLabel, parseScore } from '../lib/validate.js';
 import { computeTable } from '../lib/standings.js';
 import { resolvePlayer, playableFixtures, findOpenFixture, orientResult } from '../lib/report.js';
 
@@ -54,12 +54,18 @@ if (idA === idB) {
   process.exit(1);
 }
 
-const parsed = parseScore(scoreText);
+const gamesToWin = league.rules?.gamesToWin;
+const parsed = parseScore(scoreText, { gamesToWin });
 if (!parsed.ok) {
-  if (parsed.error === 'FORMAT') {
-    console.error(`Could not parse "${scoreText}" as a score. Expected a shape like "3-1".`);
+  if (parsed.error === 'NO_RULE') {
+    console.error('data/league.json has no rules.gamesToWin, so no score can be checked.');
+  } else if (parsed.error === 'FORMAT') {
+    console.error(`Could not parse "${scoreText}" as a score. Expected a shape like "${gamesToWin}-1".`);
   } else {
-    console.error(`Illegal score "${scoreText}": a best-of-five match ends when the winner has exactly 3 games.`);
+    console.error(
+      `Illegal score "${scoreText}": a ${matchFormatLabel(gamesToWin)} match `
+      + `ends when the winner has exactly ${gamesToWin} games.`,
+    );
   }
   process.exit(1);
 }

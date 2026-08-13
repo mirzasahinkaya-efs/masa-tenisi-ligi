@@ -6,6 +6,17 @@ import { generateGroupFixtures } from '../lib/schedule.js';
 const RULES = { pointsWin: 3, pointsLoss: 0 };
 const SEED = 20260810;
 
+/*
+ * The scores below are best-of-five shaped (3-2, 3-0) even though the league now
+ * plays best-of-three. That is deliberate, not stale: accumulate and computeTable
+ * never validate a score — they only tally — so the match format is none of their
+ * business, and the wider spreads let the tie scenarios further down separate
+ * game difference from games won more cleanly than ±1 and ±2 allow.
+ *
+ * If either function ever starts enforcing a format, these fixtures must move to
+ * whatever it enforces.
+ */
+
 /** Two fixtures per pair, so results can be attached by fixture id. */
 const fixtures = generateGroupFixtures('A', ['a', 'b', 'c', 'd']);
 const find = (p1, p2) => fixtures.find((f) => f.p1 === p1 && f.p2 === p2).id;

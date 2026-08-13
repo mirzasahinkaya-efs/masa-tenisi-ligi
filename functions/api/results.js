@@ -1,7 +1,7 @@
 import { verifyToken } from '../../lib/session.js';
 import { canReport, playerForSubject } from '../../lib/auth.js';
 import { findOpenFixture, orientResult, playableFixtures } from '../../lib/report.js';
-import { parseScore } from '../../lib/validate.js';
+import { matchFormatLabel, parseScore } from '../../lib/validate.js';
 import { createStore } from '../_shared/store.js';
 import { json, readCookie, SESSION_COOKIE } from '../_shared/http.js';
 
@@ -23,15 +23,6 @@ export async function handleResultPost(request, env, deps = {}) {
     return json({ error: 'Expected a JSON object.' }, { status: 400 });
   }
 
-  const score = parseScore(`${body.myGames}-${body.theirGames}`);
-  if (!score.ok) {
-    return json({
-      error: score.error === 'FORMAT'
-        ? 'Scores must be whole numbers, for example 3 and 1.'
-        : 'A best-of-five match ends when the winner has exactly 3 games.',
-    }, { status: 400 });
-  }
-
   const store = (deps.makeStore ?? (() => createStore({
     token: env.GITHUB_TOKEN, repo: env.GITHUB_REPO,
   })))();
@@ -43,6 +34,22 @@ export async function handleResultPost(request, env, deps = {}) {
     // read() throws on a non-OK response. Return the 502 this handler already
     // intends for store failures rather than raising into a 500 HTML page.
     return json({ error: 'Could not reach the league data. Please try again.' }, { status: 502 });
+  }
+
+  // Validated after the read, because the match format is a league rule rather
+  // than a constant in this file. The caller is already authenticated, so the one
+  // wasted read on a malformed score is not worth a second definition of the rule.
+  const gamesToWin = league.rules?.gamesToWin;
+  const score = parseScore(`${body.myGames}-${body.theirGames}`, { gamesToWin });
+  if (!score.ok) {
+    if (score.error === 'NO_RULE') {
+      return json({ error: 'The league rules are incomplete. Please tell an admin.' }, { status: 503 });
+    }
+    return json({
+      error: score.error === 'FORMAT'
+        ? 'Scores must be whole numbers, for example 2 and 1.'
+        : `A ${matchFormatLabel(gamesToWin)} match ends when the winner has exactly ${gamesToWin} games.`,
+    }, { status: 400 });
   }
 
   const reporter = playerForSubject(league, session.payload);

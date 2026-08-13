@@ -31,7 +31,10 @@ export const SEASON = {
 };
 
 export const RULES = {
-  matchFormat: 'best-of-5',
+  matchFormat: 'best-of-3',
+  // The load-bearing one: everything that validates a score reads this, so the
+  // format is defined here and nowhere else. `matchFormat` above is the label.
+  gamesToWin: 2,
   gameTarget: 11,
   pointsWin: 3,
   pointsLoss: 0,

@@ -27,8 +27,8 @@ async function scratchLeague() {
   // finish and the bracket resolves.
   league.results = league.fixtures.map((fixture) => ({
     fixtureId: fixture.id,
-    p1Games: fixture.p1 < fixture.p2 ? 3 : 0,
-    p2Games: fixture.p1 < fixture.p2 ? 0 : 3,
+    p1Games: fixture.p1 < fixture.p2 ? 2 : 0,
+    p2Games: fixture.p1 < fixture.p2 ? 0 : 2,
     reportedBy: 'cli',
     reportedAt: '2026-10-16T00:00:00.000Z',
   }));
@@ -50,7 +50,7 @@ test('the CLI records the CEO\'s quarter-final without crashing on the way out',
   // used to be written and the script then threw, which left the operator with
   // a stack trace instead of the commit hint.
   const { dir, bestFourth } = await scratchLeague();
-  const out = score(dir, ['tugkan', bestFourth, '3-1', '--dry-run']);
+  const out = score(dir, ['tugkan', bestFourth, '2-1', '--dry-run']);
   assert.match(out, /QF2/);
   assert.match(out, /playoff/);
   assert.equal(out.includes('TypeError'), false, out);
@@ -58,21 +58,21 @@ test('the CLI records the CEO\'s quarter-final without crashing on the way out',
 
 test('a CEO result actually lands in the file, and only once', async () => {
   const { dir, bestFourth } = await scratchLeague();
-  score(dir, ['tugkan', bestFourth, '3-1']);
+  score(dir, ['tugkan', bestFourth, '2-1']);
 
   const league = JSON.parse(await readFile(join(dir, 'data', 'league.json'), 'utf8'));
   const qf2 = league.results.filter((r) => r.fixtureId === 'QF2');
   assert.equal(qf2.length, 1);
   // Stored positionally against the fixture, so the CEO's three games belong to
   // whichever slot he occupies.
-  assert.deepEqual([qf2[0].p1Games, qf2[0].p2Games], [3, 1]);
+  assert.deepEqual([qf2[0].p1Games, qf2[0].p2Games], [2, 1]);
 });
 
 test('a group match still prints both players\' standings rows', async () => {
   // The guard must not have silenced the normal path.
   const { dir, league } = await scratchLeague();
   const [first, second] = league.groups.A;
-  const out = score(dir, [first, second, '3-0', '--fix', '--dry-run']);
+  const out = score(dir, [first, second, '2-0', '--fix', '--dry-run']);
   for (const id of [first, second]) {
     const player = league.players.find((p) => p.id === id);
     assert.ok(out.includes(player.short), `${player.short} missing from:\n${out}`);

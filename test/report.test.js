@@ -105,7 +105,7 @@ test('findOpenFixture works from either order of the two players', () => {
 
 test('after recording the first fixture, findOpenFixture returns the other orientation', () => {
   const league = makeLeague([
-    { fixtureId: 'A-R1-M1', p1Games: 3, p2Games: 1, reportedBy: 'x', reportedAt: 'y' },
+    { fixtureId: 'A-R1-M1', p1Games: 2, p2Games: 1, reportedBy: 'x', reportedAt: 'y' },
   ]);
   const result = findOpenFixture(league, 'mirza', 'tolga');
   assert.equal(result.ok, true);
@@ -114,15 +114,15 @@ test('after recording the first fixture, findOpenFixture returns the other orien
 
 test('findOpenFixture reports ALL_PLAYED once both orientations are recorded', () => {
   const league = makeLeague([
-    { fixtureId: 'A-R1-M1', p1Games: 3, p2Games: 1, reportedBy: 'x', reportedAt: 'y' },
-    { fixtureId: 'A-R4-M1', p1Games: 1, p2Games: 3, reportedBy: 'x', reportedAt: 'y' },
+    { fixtureId: 'A-R1-M1', p1Games: 2, p2Games: 1, reportedBy: 'x', reportedAt: 'y' },
+    { fixtureId: 'A-R4-M1', p1Games: 1, p2Games: 2, reportedBy: 'x', reportedAt: 'y' },
   ]);
   const result = findOpenFixture(league, 'mirza', 'tolga');
   assert.equal(result.ok, false);
   assert.equal(result.error, 'ALL_PLAYED');
   const byId = Object.fromEntries(result.played.map((p) => [p.fixtureId, p]));
-  assert.deepEqual(byId['A-R1-M1'], { fixtureId: 'A-R1-M1', p1: 'mirza', p2: 'tolga', p1Games: 3, p2Games: 1 });
-  assert.deepEqual(byId['A-R4-M1'], { fixtureId: 'A-R4-M1', p1: 'tolga', p2: 'mirza', p1Games: 1, p2Games: 3 });
+  assert.deepEqual(byId['A-R1-M1'], { fixtureId: 'A-R1-M1', p1: 'mirza', p2: 'tolga', p1Games: 2, p2Games: 1 });
+  assert.deepEqual(byId['A-R4-M1'], { fixtureId: 'A-R4-M1', p1: 'tolga', p2: 'mirza', p1Games: 1, p2Games: 2 });
 });
 
 test('findOpenFixture reports NO_PAIRING for players in different groups with no resolved playoff match', () => {
@@ -161,8 +161,8 @@ const bigLeague = (results) => ({
 /** Every group match decided in favour of whoever sorts first, so both fourths tie. */
 const allGroupsPlayed = () => bigFixtures.map((f) => ({
   fixtureId: f.id,
-  p1Games: f.p1 < f.p2 ? 3 : 0,
-  p2Games: f.p1 < f.p2 ? 0 : 3,
+  p1Games: f.p1 < f.p2 ? 2 : 0,
+  p2Games: f.p1 < f.p2 ? 0 : 2,
 }));
 
 test('the two fourth places really are dead level in this fixture', () => {
@@ -211,27 +211,27 @@ test('the best fourth can actually be given a result through findOpenFixture', (
 
 test('orientResult places the reporter\'s games on their own slot', () => {
   const fixture = { id: 'A-R1-M1', p1: 'mirza', p2: 'tolga' };
-  assert.deepEqual(orientResult(fixture, 'mirza', 3, 1), { p1Games: 3, p2Games: 1 });
-  assert.deepEqual(orientResult(fixture, 'tolga', 3, 1), { p1Games: 1, p2Games: 3 });
+  assert.deepEqual(orientResult(fixture, 'mirza', 2, 1), { p1Games: 2, p2Games: 1 });
+  assert.deepEqual(orientResult(fixture, 'tolga', 2, 1), { p1Games: 1, p2Games: 2 });
 });
 
 test('orientResult throws for a reporter who is not part of the fixture', () => {
   const fixture = { id: 'A-R1-M1', p1: 'mirza', p2: 'tolga' };
-  assert.throws(() => orientResult(fixture, 'emre-b', 3, 1), /A-R1-M1/);
+  assert.throws(() => orientResult(fixture, 'emre-b', 2, 1), /A-R1-M1/);
 });
 
-// This is the whole point of the module: the same human input ("I won 3-1")
+// This is the whole point of the module: the same human input ("I won 2-1")
 // reported against the two opposite-orientation fixtures of the same pair
 // must produce MIRRORED stored results, not identical ones.
 test('orientResult mirrors output across the two opposite-orientation fixtures of a pair', () => {
   const forward = fixtures.find((f) => f.id === 'A-R1-M1'); // p1: mirza, p2: tolga
   const reverse = fixtures.find((f) => f.id === 'A-R4-M1'); // p1: tolga, p2: mirza
 
-  // Mirza reports "I won 3-1" against both fixtures — identical reporter input.
-  const storedForward = orientResult(forward, 'mirza', 3, 1);
-  const storedReverse = orientResult(reverse, 'mirza', 3, 1);
+  // Mirza reports "I won 2-1" against both fixtures — identical reporter input.
+  const storedForward = orientResult(forward, 'mirza', 2, 1);
+  const storedReverse = orientResult(reverse, 'mirza', 2, 1);
 
-  assert.deepEqual(storedForward, { p1Games: 3, p2Games: 1 });
-  assert.deepEqual(storedReverse, { p1Games: 1, p2Games: 3 });
+  assert.deepEqual(storedForward, { p1Games: 2, p2Games: 1 });
+  assert.deepEqual(storedReverse, { p1Games: 1, p2Games: 2 });
   assert.notDeepEqual(storedForward, storedReverse);
 });

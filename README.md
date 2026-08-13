@@ -15,8 +15,13 @@ takes a seventh place, joined by the CEO as an eighth entrant who plays no group
 stage — into quarter-finals, semi-finals, final and third place. 68 matches
 total.
 
-Best of 5 games to 11. Win 3 points, loss 0. Tiebreaks: head-to-head, then
+Best of 3 games to 11 — first to 2 games takes the match, so the only possible
+scores are 2-0 and 2-1. Win 3 points, loss 0. Tiebreaks: head-to-head, then
 game difference, then games won, then a seeded draw.
+
+The match format lives in `rules.gamesToWin` in `data/league.json` and is read
+from there by the API, the CLI and the web form. Nothing hardcodes it, so
+changing that one number changes what every path accepts.
 
 The two fourth-placed players never met, so head-to-head cannot separate them:
 that comparison is points, then game difference, then games won, then the same
