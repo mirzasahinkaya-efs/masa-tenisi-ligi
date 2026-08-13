@@ -10,10 +10,40 @@ test('the exact passphrase matches', async () => {
 
 test('anything other than the exact passphrase does not match', async () => {
   for (const guess of [
-    'kırmızı-raket-2025', 'kırmızı-raket', 'kırmızı-raket-2026 ', ' kırmızı-raket-2026',
+    'kırmızı-raket-2025', 'kırmızı-raket',
     'KIRMIZI-RAKET-2026', 'kirmizi-raket-2026', REAL + 'x', '',
   ]) {
     assert.equal(await passphraseMatches(guess, REAL), false, JSON.stringify(guess));
+  }
+});
+
+test('surrounding whitespace is ignored on either side', async () => {
+  // The case that made this necessary: `console.log | pbcopy` leaves a trailing
+  // newline on the clipboard, so the SECRET ends up with one while the browser
+  // form — a single-line input, which drops pasted newlines — sends it without.
+  // Neither end can see the difference, so it has to not matter.
+  for (const stored of [`${REAL}\n`, `${REAL}\r\n`, ` ${REAL} `, `\t${REAL}`]) {
+    assert.equal(await passphraseMatches(REAL, stored), true, `stored ${JSON.stringify(stored)}`);
+  }
+  for (const guess of [`${REAL}\n`, ` ${REAL}`, `${REAL}  `]) {
+    assert.equal(await passphraseMatches(guess, REAL), true, `sent ${JSON.stringify(guess)}`);
+  }
+});
+
+test('whitespace inside the passphrase is still significant', async () => {
+  // Trimming the ends must not turn into ignoring whitespace generally.
+  const spaced = 'kırmızı raket 2026';
+  assert.equal(await passphraseMatches('kırmızıraket2026', spaced), false);
+  assert.equal(await passphraseMatches('kırmızı  raket 2026', spaced), false);
+  assert.equal(await passphraseMatches(` ${spaced} `, spaced), true);
+});
+
+test('a whitespace-only secret cannot be guessed with whitespace', async () => {
+  for (const secret of [' ', '\n', '\t\t', '  \r\n  ']) {
+    for (const guess of ['', ' ', '\n', secret, 'anything']) {
+      assert.equal(await passphraseMatches(guess, secret), false,
+        `${JSON.stringify(guess)} vs ${JSON.stringify(secret)}`);
+    }
   }
 });
 
