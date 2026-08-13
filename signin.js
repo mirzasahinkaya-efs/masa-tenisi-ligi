@@ -89,14 +89,19 @@ function showSignIn() {
         }),
       });
       const body = await response.json().catch(() => ({}));
-      if (response.ok) {
+      // `body.ok`, not just `response.ok`: when no Function matches the method,
+      // Cloudflare Pages falls through to the static assets and answers 200 with
+      // the page's own HTML. Reloading on that would drop the user back on this
+      // form with no cookie and no explanation, over and over.
+      if (response.ok && body.ok) {
         // Reload rather than swap the forms in place: the session cookie is
         // now set, so a fresh load renders the signed-in state through the
         // same path as any normal visit.
         location.reload();
         return;
       }
-      signinStatus.textContent = body.error ?? 'Could not sign in.';
+      signinStatus.textContent = body.error
+        ?? (response.ok ? 'Sign-in is unavailable just now.' : 'Could not sign in.');
       signinPassphrase.value = '';
       button.disabled = false;
     } catch {
