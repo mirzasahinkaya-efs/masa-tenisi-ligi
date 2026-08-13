@@ -136,12 +136,30 @@ test('the bracket names only slots the groups can actually fill', () => {
   }
 });
 
-test('ten rounds run Monday to Friday from the season start', () => {
+test('ten rounds run Monday to Friday, a week apart, from the season start', () => {
+  // Derived from SEASON.startDate rather than hardcoded, so moving the season
+  // does not mean editing four dates here — the shape is what matters, and the
+  // drift test above already pins the start date itself to the roster.
+  const DAY = 24 * 60 * 60 * 1000;
+  const day = (iso) => new Date(`${iso}T00:00:00Z`);
+
   assert.equal(league.rounds.length, 10);
-  assert.equal(league.rounds[0].opensAt, '2026-08-10');
-  assert.equal(league.rounds[0].deadline, '2026-08-14');
-  assert.equal(league.rounds[9].opensAt, '2026-10-12');
-  assert.equal(league.rounds[9].deadline, '2026-10-16');
+  assert.equal(league.rounds[0].opensAt, SEASON.startDate);
+
+  league.rounds.forEach((round, index) => {
+    assert.equal(round.n, index + 1);
+    assert.equal(day(round.opensAt).getUTCDay(), 1, `round ${round.n} must open on a Monday`);
+    assert.equal(day(round.deadline).getUTCDay(), 5, `round ${round.n} must close on a Friday`);
+    assert.equal(
+      (day(round.deadline) - day(round.opensAt)) / DAY, 4, `round ${round.n} spans Mon-Fri`,
+    );
+    if (index > 0) {
+      assert.equal(
+        (day(round.opensAt) - day(league.rounds[index - 1].opensAt)) / DAY, 7,
+        `round ${round.n} starts a week after round ${index}`,
+      );
+    }
+  });
 });
 
 test('the committed draw seed is the season seed', () => {

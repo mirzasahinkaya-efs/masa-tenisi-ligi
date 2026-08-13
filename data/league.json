@@ -2,7 +2,7 @@
   "season": {
     "id": "2026-autumn",
     "name": "Efsora Table Tennis League",
-    "startDate": "2026-08-10",
+    "startDate": "2026-08-17",
     "drawSeed": 20260810,
     "admins": [
       "U0AT8HQ7C9K"
@@ -136,53 +136,53 @@
   "rounds": [
     {
       "n": 1,
-      "opensAt": "2026-08-10",
-      "deadline": "2026-08-14"
-    },
-    {
-      "n": 2,
       "opensAt": "2026-08-17",
       "deadline": "2026-08-21"
     },
     {
-      "n": 3,
+      "n": 2,
       "opensAt": "2026-08-24",
       "deadline": "2026-08-28"
     },
     {
-      "n": 4,
+      "n": 3,
       "opensAt": "2026-08-31",
       "deadline": "2026-09-04"
     },
     {
-      "n": 5,
+      "n": 4,
       "opensAt": "2026-09-07",
       "deadline": "2026-09-11"
     },
     {
-      "n": 6,
+      "n": 5,
       "opensAt": "2026-09-14",
       "deadline": "2026-09-18"
     },
     {
-      "n": 7,
+      "n": 6,
       "opensAt": "2026-09-21",
       "deadline": "2026-09-25"
     },
     {
-      "n": 8,
+      "n": 7,
       "opensAt": "2026-09-28",
       "deadline": "2026-10-02"
     },
     {
-      "n": 9,
+      "n": 8,
       "opensAt": "2026-10-05",
       "deadline": "2026-10-09"
     },
     {
-      "n": 10,
+      "n": 9,
       "opensAt": "2026-10-12",
       "deadline": "2026-10-16"
+    },
+    {
+      "n": 10,
+      "opensAt": "2026-10-19",
+      "deadline": "2026-10-23"
     }
   ],
   "fixtures": [

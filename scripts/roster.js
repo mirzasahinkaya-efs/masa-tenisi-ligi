@@ -25,7 +25,7 @@ export const ROSTER = [
 export const SEASON = {
   id: '2026-autumn',
   name: 'Efsora Table Tennis League',
-  startDate: '2026-08-10',
+  startDate: '2026-08-17',
   drawSeed: 20260810,
   admins: ['U0AT8HQ7C9K'],
 };
