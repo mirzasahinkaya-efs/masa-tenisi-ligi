@@ -739,5 +739,13 @@
       "slotP2": "L-SF2"
     }
   ],
-  "results": []
+  "results": [
+    {
+      "fixtureId": "A-R1-M1",
+      "p1Games": 2,
+      "p2Games": 0,
+      "reportedBy": "player:aytac",
+      "reportedAt": "2026-08-21T13:57:21.000Z"
+    }
+  ]
 }
