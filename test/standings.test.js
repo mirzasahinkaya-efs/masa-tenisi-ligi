@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { accumulate, computeTable } from '../lib/standings.js';
+import { accumulate, computeTable, isRanked } from '../lib/standings.js';
 import { generateGroupFixtures } from '../lib/schedule.js';
 
 const RULES = { pointsWin: 3, pointsLoss: 0 };
@@ -161,4 +161,29 @@ test('games won breaks a tie when head-to-head and game difference are level', (
   const order = computeTable(['a', 'b', 'c', 'd'], fixtures, results, RULES, SEED)
     .map((r) => r.playerId);
   assert.ok(order.indexOf('a') < order.indexOf('b'), order.join(','));
+});
+
+test('a table is not a ranking until everyone has played', () => {
+  // The bug this exists for: one played match in a six-player group put three
+  // players who had never played into "qualifying" positions on the live site,
+  // ordered purely by the tiebreak chain's seeded draw.
+  const ids = ['a', 'b', 'c', 'd'];
+  const none = computeTable(ids, fixtures, [], RULES, SEED);
+  assert.equal(isRanked(none), false, 'nothing played');
+
+  const one = computeTable(ids, fixtures, [beat('a', 'b', 1)], RULES, SEED);
+  assert.equal(isRanked(one), false, 'a and b have played, c and d have not');
+  assert.deepEqual(
+    one.filter((row) => row.played === 0).map((row) => row.playerId).sort(),
+    ['c', 'd'],
+    'premise: two players still have no games',
+  );
+
+  const all = computeTable(ids, fixtures, [beat('a', 'b', 1), beat('c', 'd', 0)], RULES, SEED);
+  assert.equal(isRanked(all), true, 'every player has now had a game');
+});
+
+test('isRanked refuses an empty table rather than vacuously accepting it', () => {
+  // [].every() is true, which would make a table with no players "ranked".
+  assert.equal(isRanked([]), false);
 });

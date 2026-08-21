@@ -1,7 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  PLAYOFF_FIXTURES, QUALIFY_PER_GROUP, bestFourthPlayerId, isGroupComplete, resolveBracket,
+  PLAYOFF_FIXTURES, QUALIFY_PER_GROUP, allGroupsComplete, bestFourthPlayerId, isGroupComplete,
+  resolveBracket,
 } from '../lib/bracket.js';
 import { generateGroupFixtures } from '../lib/schedule.js';
 import { computeTable } from '../lib/standings.js';
@@ -115,6 +116,16 @@ test('a group is incomplete until every one of its fixtures has a result', () =>
   assert.equal(isGroupComplete('A', fixtures, missingOneFromA), false);
   assert.equal(isGroupComplete('B', fixtures, missingOneFromA), true);
   assert.equal(isGroupComplete('A', fixtures, all), true);
+});
+
+test('no groups at all does not count as every group being complete', () => {
+  // [].every() is true. Both the bracket and the standings table gate the
+  // cross-group fourth place on this, so a vacuous yes would publish a
+  // qualifier chosen from nothing.
+  const done = completeAllGroups();
+  assert.equal(allGroupsComplete({}, fixtures, done), false);
+  assert.equal(allGroupsComplete({ A: [], B: [] }, fixtures, done), true, 'named groups are checked against the fixtures, not the tables');
+  assert.equal(allGroupsComplete({ A: [] }, fixtures, []), false, 'nothing played');
 });
 
 test('a group with no fixtures is not complete', () => {

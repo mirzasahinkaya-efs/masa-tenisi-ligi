@@ -1,5 +1,7 @@
-import { computeTable } from './lib/standings.js';
-import { resolveBracket, bestFourthPlayerId, QUALIFY_PER_GROUP } from './lib/bracket.js';
+import { computeTable, isRanked } from './lib/standings.js';
+import {
+  resolveBracket, bestFourthPlayerId, allGroupsComplete, QUALIFY_PER_GROUP,
+} from './lib/bracket.js';
 
 const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (character) => ({
   '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
@@ -88,7 +90,7 @@ function wireSectionNav() {
 }
 
 function renderTable(elementId, rows, bestFourth) {
-  const started = rows.some((row) => row.played > 0);
+  const ranked = isRanked(rows);
 
   const head = `
     <thead><tr>
@@ -96,18 +98,16 @@ function renderTable(elementId, rows, bestFourth) {
     </tr></thead>`;
 
   const classFor = (row) => {
-    if (!started) return '';
+    if (!ranked) return '';
     if (row.position <= QUALIFY_PER_GROUP) return 'qualifying';
-    // The fourth place currently holding the cross-group play-off slot. Marked
-    // differently because it is provisional in a way the top three are not: it
-    // can be taken by the other group's fourth without this player losing a
-    // single match.
+    // The fourth place holding the cross-group play-off slot. Only ever set once
+    // both groups are finished, so it marks a decided place rather than a guess.
     return row.playerId === bestFourth ? 'qualifying qualifying--playoff' : '';
   };
 
   const body = rows.map((row) => `
     <tr class="${classFor(row)}">
-      <td>${started ? row.position : '–'}</td>
+      <td>${ranked ? row.position : '–'}</td>
       <td title="${esc(fullNameOf.get(row.playerId))}">${esc(nameOf.get(row.playerId))}</td>
       <td>${row.played}</td>
       <td>${row.won}</td>
@@ -225,7 +225,12 @@ renderSeasonStrip();
 // Three qualify from each group. The seventh place goes to whichever fourth
 // place is stronger across the two, and the eighth is the CEO, who plays no
 // group stage.
-const bestFourth = bestFourthPlayerId(tables, league.season.drawSeed);
+// Only once EVERY group is finished. Mid-season the two fourth places have
+// played different numbers of matches, so comparing them is not like-for-like —
+// and the footnote under the tables promises exactly this.
+const bestFourth = allGroupsComplete(tables, allFixtures, league.results)
+  ? bestFourthPlayerId(tables, league.season.drawSeed)
+  : null;
 renderTable('group-a', tables.A, bestFourth);
 renderTable('group-b', tables.B, bestFourth);
 renderCurrentRound();
