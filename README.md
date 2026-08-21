@@ -59,96 +59,120 @@ draw also produces different fixture ids, so old results cannot be pasted back.
 
 ## Recording a result
 
-Two ways to record a result, and they write to the same place (`data/league.json`):
+Results are recorded from a checkout:
 
-- **On the site.** Pick your name, enter the league passphrase from the Slack
-  channel, then use the Record panel to submit a result for one of your own
-  unplayed group fixtures. Playoff fixtures are cross-group, so they are not
-  offered here; record those from a checkout instead.
+    npm run score -- <playerA> <playerB> <aGames>-<bGames>
+    git commit -am "Record ..." && git push
 
-  The passphrase is shared, so it proves that whoever is submitting is one of
-  us — not which one of us. Anybody who has it could file a result under
-  another player's name. That is a deliberate trade: it is the only sign-in the
-  league can actually deploy today, since Slack app creation, company-domain
-  DNS and email sender verification all need permissions we do not have.
-  Every submission is a git commit, so a wrong one is visible and revertible.
-- **From a checkout.**
+The score is always from `playerA`'s point of view, so `npm run score -- defne
+tolga 2-1` records Defne winning two games to one. Group matches are best of 3
+(`2-0`, `2-1`); playoff matches are best of 5 (`3-0`, `3-1`, `3-2`) — the script
+reads the format from the fixture it resolves, so it will tell you which applies.
+Names match loosely: `def`, `defne` or `olga` all resolve, while `emre` is refused
+as ambiguous.
 
-      npm run score -- <playerA> <playerB> <aGames>-<bGames>
+Add `--dry-run` to preview without writing, and `--fix` to overwrite when both
+meetings between two players are already recorded.
 
-  The score is always from `playerA`'s point of view, e.g. `npm run score --
-  defne tolga 3-1` records Defne winning 3 games to 1. Add `--fix` to overwrite
-  when both meetings between the two players are already recorded (add
-  `--dry-run` to preview either case without writing).
+**The push is what publishes it.** A commit that is not pushed changes nothing on
+the site.
 
-Admin corrections — fixing a result after the fact — go through the CLI with
-`--fix`, not the web form. The web form has no path for correcting someone
-else's match or a match you've already reported; that is intentional, since a
-correction needs a human to notice the discrepancy rather than a second
-self-service submission.
+There is also a self-service web form — pick your name, enter a shared
+passphrase, submit your own result — which is built, tested and deployed, but its
+host is unreachable from Turkey. See [Deployment](#deployment). Until that is
+resolved, players report scores to whoever runs the league and the CLI does the
+rest.
+
+Corrections go through `--fix` and were never in the web form: a correction needs
+a human to notice the discrepancy rather than a second self-service submission.
 
 ## Deployment
 
-`.github/workflows/pages.yml` runs the tests, then deploys to two hosts on
+`.github/workflows/pages.yml` runs the tests, then deploys to **two** hosts on
 every push to `main`:
 
-- **GitHub Pages** — the original URL. Static files only; it cannot run
-  `/api/*`, so the page detects that and hides the Record panel entirely.
-- **Cloudflare Pages** (`efsora-masa-tenisi-ligi.pages.dev`) — the same files
-  *plus* the Functions, so sign-in and result submission work. One origin for
-  both is what lets the session use an `HttpOnly` cookie rather than a token
-  exposed to JavaScript.
+| Host | Serves | Reachability |
+| --- | --- | --- |
+| `mirzasahinkaya-efs.github.io/masa-tenisi-ligi` | static site only | works everywhere tested |
+| `efsora-masa-tenisi-ligi.pages.dev` | static site **plus** the `/api/*` Functions, so sign-in and self-service result entry work | blocked on some Turkish networks — see below |
 
-The Cloudflare project is **direct upload**, not git-connected, because the
-Pages GitHub App is not installed on the account — hence the `wrangler` step in
-the workflow rather than a Cloudflare-side build.
+The deploy is load-bearing, not a convenience: `data/league.json` is served as a
+static asset, so a recorded result is invisible on a host until that host
+redeploys. A failing test skips both deploys, which freezes both sites — so the
+test suite must never depend on how many results the league happens to hold.
+`test/results-api.test.js` blanks `results` for exactly that reason.
 
-That deploy step is **not optional** once results are submitted on the site:
-`data/league.json` is served as a static asset, so a result the API commits to
-the repository stays invisible until the site redeploys. That redeploy is what
-the form means by "the table updates in about a minute".
+On GitHub Pages there is no `/api/*`. The page detects that — its `/api/me`
+request comes back as HTML rather than JSON — and hides the Record panel and the
+sign-in link entirely, rather than offering a control it cannot honour. From
+there, results go through the CLI.
 
-The API needs these on the Cloudflare project:
+### The pages.dev block
+
+`*.pages.dev` is unreachable from some Turkish networks. Measured 2026-08-13 on
+Turkcell fixed line and confirmed on mobile data: DNS for the whole wildcard is
+sinkholed to a Superonline address, and pinning the real Cloudflare IP still dies
+before TLS — so the filter keys on the hostname, not the IP or DNS.
+
+- blocked: `pages.dev`, `workers.dev`, `trycloudflare.com`, `netlify.app`, `fly.dev`
+- reachable: `github.io`, `vercel.app`, `deno.dev`, `onrender.com`, `web.app`
+
+It is not a block on Cloudflare (`cloudflare.com` is fine) nor on free hosting
+(half the list works) — it is a list of specific hosting wildcards. To test any
+wildcard without owning a site there, request `https://does-not-exist.<wildcard>/`:
+an unblocked one completes TLS and answers 404, a blocked one never starts TLS.
+
+**But it is not universal.** A player recorded a result through the Cloudflare
+site on 2026-08-21, so reachability depends on the network. Both hosts therefore
+stay deployed: whoever can reach `pages.dev` gets self-service, and anyone who
+cannot uses the GitHub Pages URL plus the CLI.
+
+### Reviving self-service result entry
+
+The block matches the *hostname*, and Cloudflare's IPs serve other hostnames
+fine — so a **custom domain** on the same Pages project should restore it with no
+code change. That needs a domain (~$10/yr), which also gives the account its
+first zone.
+
+Moving to another host instead is possible but is a port, not a redeploy: the
+handlers are Pages Functions (`onRequestGet({ request, env })` plus a KV
+binding), and — more importantly — the session relies on the site and the API
+sharing **one origin**, which is what allows the `__Host-` cookie. Splitting them
+across two hosts breaks it, because `SameSite=Lax` is not sent cross-site; it
+would force `SameSite=None` plus CORS with credentials, a weaker CSRF posture
+than what is there now. Keep both on one origin.
+
+### What the API needs, if it is ever reachable again
 
 | Variable | Required | Purpose |
 | --- | --- | --- |
 | `SESSION_SECRET` | yes | Signs session cookies. Changing it signs everyone out. |
-| `LEAGUE_PASSPHRASE` | yes | The shared passphrase. **Generate it, do not invent it** — see below. Rotating it does *not* end sessions already issued; change `SESSION_SECRET` too if that matters. |
+| `LEAGUE_PASSPHRASE` | yes | The shared passphrase. **Generate it, do not invent it.** Rotating it does *not* end sessions already issued; change `SESSION_SECRET` too if that matters. |
 | `GITHUB_TOKEN` | yes | Fine-grained, `contents: write`, scoped to this repository only. Lets the API commit results. |
-| `GITHUB_REPO` | yes | `owner/name` of this repository. Already set — not a secret. |
-| `LOGIN_KV` | no | KV namespace binding. Brakes guessing — 10 attempts per client per 10 minutes, 60 across the whole site. Already bound. Without it there is no brute-force limit at all. |
+| `GITHUB_REPO` | yes | `owner/name` of this repository. Not a secret. |
+| `LOGIN_KV` | no | KV namespace binding. Brakes guessing — 10 attempts per client per 10 minutes, 60 across the whole site. Without it there is no brute-force limit at all. |
 
-The three secrets are set with `wrangler`, never through a file in the repo:
+Secrets are set with `wrangler`, never through a file in the repo:
 
     npx wrangler login
     npx wrangler pages secret put SESSION_SECRET --project-name efsora-masa-tenisi-ligi
 
-It prompts for the value, so nothing lands in shell history. Generate the
-random ones straight to the clipboard rather than printing them:
+It prompts for the value, so nothing lands in shell history. Generate the random
+ones straight to the clipboard rather than printing them — and use
+`process.stdout.write`, not `console.log`, which appends a newline that `pbcopy`
+faithfully copies and a browser password field then strips:
 
-    node -e "console.log(crypto.randomUUID().slice(0,18))" | pbcopy
+    node -e "process.stdout.write(crypto.randomUUID().slice(0,18))" | pbcopy
 
-The passphrase's own entropy is the real control here, not the brake — the brake
-deliberately fails open, and without `LOGIN_KV` it does not exist. So generate
-the passphrase too; you only need to read it once, to paste into Slack.
-
-Sessions from this route last 14 days, shorter than the Slack route's 30, since
-the credential is weaker.
-
-The deploy job additionally needs two **GitHub** repository secrets:
-`CLOUDFLARE_API_TOKEN` (a token with the *Cloudflare Pages: Edit* permission)
-and `CLOUDFLARE_ACCOUNT_ID`.
+The passphrase's own entropy is the real control, not the brake — the brake
+deliberately fails open, and without `LOGIN_KV` it does not exist. Sessions from
+this route last 14 days.
 
 `SLACK_CLIENT_ID`, `SLACK_CLIENT_SECRET`, `SLACK_TEAM_ID` and
 `ALLOWED_EMAIL_DOMAIN` belong to the Slack sign-in route (`/api/login`,
 `/api/callback`), which is complete and tested but cannot be deployed without
-Efsora workspace admin rights. It is dormant, not dead: with those unset,
-`/api/login` answers 503 rather than bouncing anyone to a broken Slack page,
-and `/api/passphrase` works on its own.
-
-Until the secrets are set, `/api/passphrase` answers 503 — a configuration
-fault, deliberately distinct from a refused sign-in — and the page falls back to
-read-only.
+Efsora workspace admin rights. Dormant, not dead: with those unset `/api/login`
+answers 503 rather than bouncing anyone to a broken Slack page.
 
 ## Local preview
 

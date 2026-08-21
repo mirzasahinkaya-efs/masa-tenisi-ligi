@@ -9,7 +9,19 @@ import { SESSION_COOKIE } from '../functions/_shared/http.js';
 
 const NOW = 1_786_000_000;
 const env = { SESSION_SECRET: 'session-secret', GITHUB_TOKEN: 't', GITHUB_REPO: 'o/r' };
-const base = JSON.parse(await readFile(new URL('../data/league.json', import.meta.url), 'utf8'));
+const league0 = JSON.parse(
+  await readFile(new URL('../data/league.json', import.meta.url), 'utf8'),
+);
+/*
+ * The real roster, fixtures and rules — but deliberately NO results.
+ *
+ * These tests count what a submission adds, so they must not depend on how many
+ * results the live league happens to hold. Coupling to that is worse than
+ * brittle: recording a match would fail CI, CI failing skips the deploy, and the
+ * deploy is what publishes the match. Seed results explicitly where a test needs
+ * them (the race tests below do).
+ */
+const base = { ...league0, results: [] };
 
 const session = (slackId) => signToken(
   { t: 'session', k: 'slack', sub: slackId }, env.SESSION_SECRET,
