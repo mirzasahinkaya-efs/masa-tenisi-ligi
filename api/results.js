@@ -1,0 +1,6 @@
+// Vercel adapter. The handler is Web-standard — (Request, env) => Response — so
+// this only supplies `env`, which Cloudflare passes in and Vercel exposes as
+// process.env. The logic lives in functions/ and is shared by both hosts.
+import { handleResultPost } from '../functions/api/results.js';
+
+export const POST = (request) => handleResultPost(request, process.env);

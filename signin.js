@@ -1,7 +1,8 @@
 import { chooseSigninState, panelUsable } from './lib/signin-state.js';
 import { maxGamesToWin } from './lib/validate.js';
+import { loadLeague } from './lib/league-source.js';
 
-const league = await fetch('./data/league.json', { cache: 'no-store' }).then((r) => r.json());
+const { league } = await loadLeague((...args) => fetch(...args));
 const nameOf = new Map(league.players.map((player) => [player.id, player.short]));
 
 const account = document.getElementById('account');
@@ -162,7 +163,7 @@ function showReportForm(player) {
           ? ` — meeting ${body.meeting} of ${body.meetingsTotal}`
           : '';
         const round = body.round ? `Round ${body.round}` : 'Recorded';
-        status.textContent = `${round}${which}. The table updates in about a minute.`;
+        status.textContent = `${round}${which}. Reload the page to see it in the table.`;
       } else {
         status.textContent = body.error ?? 'Could not save the result.';
         button.disabled = false;

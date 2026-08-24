@@ -77,72 +77,82 @@ meetings between two players are already recorded.
 **The push is what publishes it.** A commit that is not pushed changes nothing on
 the site.
 
-There is also a self-service web form — pick your name, enter a shared
-passphrase, submit your own result — which is built, tested and deployed, but its
-host is unreachable from Turkey. See [Deployment](#deployment). Until that is
-resolved, players report scores to whoever runs the league and the CLI does the
-rest.
+Players can also record their own results on the site: pick your name, enter the
+shared passphrase, submit a score for a match you played. That needs a host that
+runs `/api/*` — see [Deployment](#deployment) for which one, and why there is
+more than one.
 
 Corrections go through `--fix` and were never in the web form: a correction needs
 a human to notice the discrepancy rather than a second self-service submission.
+Playoff results are cross-group, so the form never offers them either.
 
 ## Deployment
 
-`.github/workflows/pages.yml` runs the tests, then deploys to **two** hosts on
-every push to `main`:
+`.github/workflows/pages.yml` runs the tests, then deploys to GitHub Pages and
+Cloudflare Pages. Vercel deploys itself from its own git integration, with
+`npm test` as its build command so a failing test blocks it too.
 
 | Host | Serves | Reachability |
 | --- | --- | --- |
+| Vercel | static site **plus** `/api/*` — sign-in, self-service results, live league data | reachable on Turkish networks |
 | `mirzasahinkaya-efs.github.io/masa-tenisi-ligi` | static site only | works everywhere tested |
-| `efsora-masa-tenisi-ligi.pages.dev` | static site **plus** the `/api/*` Functions, so sign-in and self-service result entry work | blocked on some Turkish networks — see below |
+| `efsora-masa-tenisi-ligi.pages.dev` | static site plus `/api/*` | blocked on some Turkish networks |
 
-The deploy is load-bearing, not a convenience: `data/league.json` is served as a
-static asset, so a recorded result is invisible on a host until that host
-redeploys. A failing test skips both deploys, which freezes both sites — so the
-test suite must never depend on how many results the league happens to hold.
-`test/results-api.test.js` blanks `results` for exactly that reason.
+Three hosts is two more than anyone wants. Cloudflare is kept only until Vercel
+is confirmed reachable by everyone who needs it — a player *did* record a result
+through the Cloudflare site, so retiring it before Vercel is proven would remove
+a route somebody was using. Retire it after that, and keep GitHub Pages as the
+static fallback.
 
-On GitHub Pages there is no `/api/*`. The page detects that — its `/api/me`
-request comes back as HTML rather than JSON — and hides the Record panel and the
-sign-in link entirely, rather than offering a control it cannot honour. From
-there, results go through the CLI.
+### One implementation, two adapters
+
+The handlers in `functions/api/` are Web-standard — `(Request, env) => Response`
+— which is the whole reason the port was small. Each host gets a one-line
+adapter and nothing else:
+
+    functions/api/me.js   export const onRequestGet = ({ request, env }) => handleMe(request, env);
+    api/me.js             export const GET = (request) => handleMe(request, process.env);
+
+`api/` is Vercel's convention and runs on its Node.js runtime, which supports
+Web handlers natively — no runtime config needed, only `"type": "module"`, which
+`package.json` already has. `process.env` appears in `api/` only; `lib/` and
+`functions/` stay portable and are checked for that.
+
+### Live league data
+
+`data/league.json` is a static asset on every host, so a recorded result is
+invisible there until the site redeploys. `GET /api/league` reads the same file
+from the repository on request, so a result appears at once.
+
+`lib/league-source.js` tries the live endpoint and falls back to the committed
+file on any failure — a 404 where no API is deployed, a 503 where it is deployed
+but unconfigured, a 502 when the repository is unreachable, or a body that is
+not a league. That last check is load-bearing: a static host answers an unknown
+path with its own HTML, sometimes with a 200, so a successful request is not
+evidence the body is league data.
+
+The endpoint is cached at the edge for ten seconds. Without that, every page
+load would spend a GitHub API call; with it, ten seconds of staleness replaces a
+minute of CI. It is the only endpoint that is cacheable at all — `json()`
+defaults to `no-store` because everything else is per-session.
 
 ### The pages.dev block
 
 `*.pages.dev` is unreachable from some Turkish networks. Measured 2026-08-13 on
 Turkcell fixed line and confirmed on mobile data: DNS for the whole wildcard is
-sinkholed to a Superonline address, and pinning the real Cloudflare IP still dies
-before TLS — so the filter keys on the hostname, not the IP or DNS.
+sinkholed to a Superonline address, and pinning the real Cloudflare IP still
+dies before TLS — so the filter keys on the hostname, not the IP or DNS. A VPN
+gets through, and at least one player reached it without one.
 
 - blocked: `pages.dev`, `workers.dev`, `trycloudflare.com`, `netlify.app`, `fly.dev`
 - reachable: `github.io`, `vercel.app`, `deno.dev`, `onrender.com`, `web.app`
 
-It is not a block on Cloudflare (`cloudflare.com` is fine) nor on free hosting
-(half the list works) — it is a list of specific hosting wildcards. To test any
-wildcard without owning a site there, request `https://does-not-exist.<wildcard>/`:
-an unblocked one completes TLS and answers 404, a blocked one never starts TLS.
+Not a block on Cloudflare (`cloudflare.com` is fine) nor on free hosting (half
+the list works) — a list of specific hosting wildcards. To test any wildcard
+without owning a site there, request `https://does-not-exist.<wildcard>/`: an
+unblocked one completes TLS and answers 404, a blocked one never starts TLS.
 
-**But it is not universal.** A player recorded a result through the Cloudflare
-site on 2026-08-21, so reachability depends on the network. Both hosts therefore
-stay deployed: whoever can reach `pages.dev` gets self-service, and anyone who
-cannot uses the GitHub Pages URL plus the CLI.
-
-### Reviving self-service result entry
-
-The block matches the *hostname*, and Cloudflare's IPs serve other hostnames
-fine — so a **custom domain** on the same Pages project should restore it with no
-code change. That needs a domain (~$10/yr), which also gives the account its
-first zone.
-
-Moving to another host instead is possible but is a port, not a redeploy: the
-handlers are Pages Functions (`onRequestGet({ request, env })` plus a KV
-binding), and — more importantly — the session relies on the site and the API
-sharing **one origin**, which is what allows the `__Host-` cookie. Splitting them
-across two hosts breaks it, because `SameSite=Lax` is not sent cross-site; it
-would force `SameSite=None` plus CORS with credentials, a weaker CSRF posture
-than what is there now. Keep both on one origin.
-
-### What the API needs, if it is ever reachable again
+### What the API needs
 
 | Variable | Required | Purpose |
 | --- | --- | --- |
@@ -152,7 +162,8 @@ than what is there now. Keep both on one origin.
 | `GITHUB_REPO` | yes | `owner/name` of this repository. Not a secret. |
 | `LOGIN_KV` | no | KV namespace binding. Brakes guessing — 10 attempts per client per 10 minutes, 60 across the whole site. Without it there is no brute-force limit at all. |
 
-Secrets are set with `wrangler`, never through a file in the repo:
+On Vercel these are project environment variables; on Cloudflare they are set
+with `wrangler`. Never through a file in the repo:
 
     npx wrangler login
     npx wrangler pages secret put SESSION_SECRET --project-name efsora-masa-tenisi-ligi

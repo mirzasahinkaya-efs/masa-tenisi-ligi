@@ -1,4 +1,5 @@
 import { computeTable, isRanked } from './lib/standings.js';
+import { loadLeague } from './lib/league-source.js';
 import {
   resolveBracket, bestFourthPlayerId, allGroupsComplete, QUALIFY_PER_GROUP,
 } from './lib/bracket.js';
@@ -9,9 +10,9 @@ const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (character) => ({
 
 let league;
 try {
-  const response = await fetch('./data/league.json', { cache: 'no-store' });
-  if (!response.ok) throw new Error(`HTTP ${response.status}`);
-  league = await response.json();
+  // Live where an API is deployed, the committed file otherwise. Wrapped rather
+  // than passed bare so the loader never depends on how fetch is bound.
+  ({ league } = await loadLeague((...args) => fetch(...args)));
 } catch (error) {
   document.getElementById('progress').textContent =
     `Could not load league data (${error.message})`;
