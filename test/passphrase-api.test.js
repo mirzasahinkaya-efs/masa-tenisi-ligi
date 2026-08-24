@@ -354,3 +354,33 @@ test('with no KV bound at all, sign-in still works', async () => {
   );
   assert.equal(response.status, 200);
 });
+
+test('the store credentials are reported separately from the sign-in secrets', async () => {
+  // Two different faults with two different fixes: "sign-in is not configured"
+  // means LEAGUE_PASSPHRASE/SESSION_SECRET, "the store is not configured" means
+  // GITHUB_TOKEN/GITHUB_REPO. One message for both would name the wrong variable.
+  const body = { passphrase: PASSPHRASE, playerId: 'tolga' };
+
+  const noStore = await handlePassphrasePost(post(body), {
+    SESSION_SECRET: env.SESSION_SECRET, LEAGUE_PASSPHRASE: PASSPHRASE,
+  }, { nowSeconds: () => NOW });
+  assert.equal(noStore.status, 503);
+  assert.match((await noStore.json()).error, /store is not configured/);
+
+  const noSignIn = await handlePassphrasePost(post(body), {
+    GITHUB_TOKEN: 't', GITHUB_REPO: 'o/r',
+  }, { nowSeconds: () => NOW });
+  assert.equal(noSignIn.status, 503);
+  assert.match((await noSignIn.json()).error, /Sign-in is not configured/);
+});
+
+test('a wrong passphrase is still a refusal, not a configuration report', async () => {
+  // The store guard sits AFTER the passphrase check on purpose: an anonymous
+  // caller should not be able to probe the deployment's configuration.
+  const response = await handlePassphrasePost(
+    post({ passphrase: 'wrong', playerId: 'tolga' }),
+    { SESSION_SECRET: env.SESSION_SECRET, LEAGUE_PASSPHRASE: PASSPHRASE },
+    { nowSeconds: () => NOW },
+  );
+  assert.equal(response.status, 403);
+});

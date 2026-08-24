@@ -2,7 +2,7 @@ import { verifyToken } from '../../lib/session.js';
 import { canReport, playerForSubject } from '../../lib/auth.js';
 import { findOpenFixture, orientResult, playableFixtures } from '../../lib/report.js';
 import { gamesToWinFor, matchFormatLabel, parseScore } from '../../lib/validate.js';
-import { createStore } from '../_shared/store.js';
+import { createStore, storeConfigured } from '../_shared/store.js';
 import { json, readCookie, SESSION_COOKIE } from '../_shared/http.js';
 
 export async function handleResultPost(request, env, deps = {}) {
@@ -21,6 +21,10 @@ export async function handleResultPost(request, env, deps = {}) {
   }
   if (typeof body !== 'object' || body === null || Array.isArray(body)) {
     return json({ error: 'Expected a JSON object.' }, { status: 400 });
+  }
+
+  if (!deps.makeStore && !storeConfigured(env)) {
+    return json({ error: 'The league data store is not configured. Please tell an admin.' }, { status: 503 });
   }
 
   const store = (deps.makeStore ?? (() => createStore({

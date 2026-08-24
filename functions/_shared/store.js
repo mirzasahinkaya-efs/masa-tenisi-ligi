@@ -16,6 +16,17 @@ function toBase64(bytes) {
  * moment produce a 409 that is retried rather than one silently overwriting
  * the other.
  */
+/**
+ * Whether the credentials the store needs are present.
+ *
+ * Checked by callers BEFORE reading, because without them `read()` fails with a
+ * 401 that is indistinguishable from GitHub being down — and reporting a missing
+ * environment variable as "could not reach the league data, please try again"
+ * sends an operator to githubstatus.com and invites retrying something that can
+ * never succeed.
+ */
+export const storeConfigured = (env) => Boolean(env?.GITHUB_TOKEN && env?.GITHUB_REPO);
+
 export function createStore({
   token, repo, branch = 'main', path = 'data/league.json', fetchImpl = fetch,
 }) {

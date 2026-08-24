@@ -460,3 +460,36 @@ test('a store read failure returns 502 rather than throwing', async () => {
   );
   assert.equal(response.status, 502);
 });
+
+test('a deployment with no store credentials says so, and does not say "try again"', async () => {
+  // The bug this closes: on a freshly connected host with SESSION_SECRET and
+  // LEAGUE_PASSPHRASE set but GITHUB_TOKEN missing, store.read() failed with a
+  // 401 and this handler reported "Could not reach the league data. Please try
+  // again." — which sends an operator to githubstatus.com and invites retrying
+  // something that can never succeed.
+  const token = await passphraseSession('mirza');
+  for (const broken of [
+    { SESSION_SECRET: env.SESSION_SECRET },
+    { SESSION_SECRET: env.SESSION_SECRET, GITHUB_TOKEN: 'x' },
+    { SESSION_SECRET: env.SESSION_SECRET, GITHUB_REPO: 'o/r' },
+    { ...env, GITHUB_TOKEN: '' },
+  ]) {
+    const response = await handleResultPost(
+      await postAs({ opponentId: 'tolga', myGames: 2, theirGames: 1 }, token),
+      broken, { nowSeconds: () => NOW },
+    );
+    assert.equal(response.status, 503, JSON.stringify(Object.keys(broken)));
+    const { error } = await response.json();
+    assert.match(error, /not configured/);
+    assert.equal(/try again/i.test(error), false, error);
+  }
+});
+
+test('an unauthenticated caller is refused before configuration is reported', async () => {
+  // Ordering: a stranger must not learn whether the deployment is configured.
+  const response = await handleResultPost(
+    await postAs({ opponentId: 'tolga', myGames: 2, theirGames: 1 }, null),
+    { SESSION_SECRET: env.SESSION_SECRET }, { nowSeconds: () => NOW },
+  );
+  assert.equal(response.status, 401);
+});

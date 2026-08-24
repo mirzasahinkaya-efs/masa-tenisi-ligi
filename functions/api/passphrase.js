@@ -1,7 +1,7 @@
 import { signToken } from '../../lib/session.js';
 import { passphraseMatches } from '../../lib/passphrase.js';
 import { playerById } from '../../lib/auth.js';
-import { createStore } from '../_shared/store.js';
+import { createStore, storeConfigured } from '../_shared/store.js';
 import { json, sessionCookie } from '../_shared/http.js';
 
 // Shorter than the Slack route's 30 days: a shared passphrase is a materially
@@ -121,6 +121,10 @@ export async function handlePassphrasePost(request, env, deps = {}) {
   // league data is reachable.
   if (!await passphraseMatches(body.passphrase, env.LEAGUE_PASSPHRASE)) {
     return json({ error: 'That passphrase is not right.' }, { status: 403 });
+  }
+
+  if (!deps.makeStore && !storeConfigured(env)) {
+    return json({ error: 'The league data store is not configured. Please tell an admin.' }, { status: 503 });
   }
 
   const store = (deps.makeStore ?? (() => createStore({

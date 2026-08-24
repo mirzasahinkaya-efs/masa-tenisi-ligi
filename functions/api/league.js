@@ -1,4 +1,4 @@
-import { createStore } from '../_shared/store.js';
+import { createStore, storeConfigured } from '../_shared/store.js';
 import { json } from '../_shared/http.js';
 
 /**
@@ -17,7 +17,7 @@ import { json } from '../_shared/http.js';
 export async function handleLeagueGet(env, deps = {}) {
   // An unconfigured deployment is a configuration fault, not an empty league —
   // and the client falls back to the static file either way.
-  if (!env.GITHUB_TOKEN || !env.GITHUB_REPO) {
+  if (!storeConfigured(env)) {
     return json({ error: 'Live league data is not configured.' }, { status: 503 });
   }
 
