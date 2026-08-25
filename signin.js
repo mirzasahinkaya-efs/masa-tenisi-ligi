@@ -1,5 +1,6 @@
 import { chooseSigninState, panelUsable } from './lib/signin-state.js';
 import { maxGamesToWin } from './lib/validate.js';
+import { recordedFor } from './lib/report.js';
 import { loadLeague } from './lib/league-source.js';
 
 const { league } = await loadLeague((...args) => fetch(...args));
@@ -16,6 +17,14 @@ const signinNote = document.getElementById('signin-note');
 const signinStatus = document.getElementById('signin-status');
 const signinPlayer = document.getElementById('signin-player');
 const signinPassphrase = document.getElementById('signin-passphrase');
+
+const amend = document.getElementById('amend');
+const amendForm = document.getElementById('amend-form');
+const amendMatch = document.getElementById('amend-match');
+const amendMine = document.getElementById('amend-mine');
+const amendTheirs = document.getElementById('amend-theirs');
+const amendDelete = document.getElementById('amend-delete');
+const amendStatus = document.getElementById('amend-status');
 
 const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (character) => ({
   '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
@@ -175,6 +184,102 @@ function showReportForm(player) {
   });
 }
 
+/**
+ * Correcting or removing one of your own recorded results.
+ *
+ * Shown only when there is something to fix, so the panel stays a single
+ * "record a result" form until a player actually has a result. The scores come
+ * from `recordedFor`, which states them from this player's own side — the stored
+ * form is positional, and a pair's two meetings are in opposite orientations.
+ */
+function showAmend(player) {
+  const mine = recordedFor(league, player.id);
+  if (!mine.length) return;
+
+  amend.hidden = false;
+  amendMatch.innerHTML = mine.map((entry) => {
+    const when = entry.round === null ? entry.stage : `round ${entry.round}`;
+    const label = `${nameOf.get(entry.opponentId)} — ${entry.myGames}-${entry.theirGames} (${when})`;
+    return `<option value="${esc(entry.fixtureId)}">${esc(label)}</option>`;
+  }).join('');
+
+  const byFixture = new Map(mine.map((entry) => [entry.fixtureId, entry]));
+  // Pre-fill with what is currently recorded, so "Correct" without touching the
+  // selects is a no-op rather than a silent change to 0-0.
+  const syncScores = () => {
+    const entry = byFixture.get(amendMatch.value);
+    if (!entry) return;
+    amendMine.value = String(entry.myGames);
+    amendTheirs.value = String(entry.theirGames);
+    amendStatus.textContent = '';
+  };
+  fillGames('amend-mine');
+  fillGames('amend-theirs');
+  amendMatch.addEventListener('change', syncScores);
+  syncScores();
+
+  const busy = (on) => {
+    amendForm.querySelector('button').disabled = on;
+    amendDelete.disabled = on;
+  };
+
+  amendForm.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    busy(true);
+    amendStatus.textContent = 'Saving…';
+    try {
+      const response = await fetch('./api/results', {
+        method: 'PATCH',
+        credentials: 'same-origin',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          fixtureId: amendMatch.value,
+          myGames: Number(amendMine.value),
+          theirGames: Number(amendTheirs.value),
+        }),
+      });
+      const body = await response.json().catch(() => ({}));
+      if (response.ok && body.ok) {
+        location.reload();
+        return;
+      }
+      amendStatus.textContent = body.error
+        ?? (response.ok ? 'Corrections are unavailable just now.' : 'Could not save the correction.');
+      busy(false);
+    } catch {
+      amendStatus.textContent = 'Could not reach the server. Please try again.';
+      busy(false);
+    }
+  });
+
+  amendDelete.addEventListener('click', async () => {
+    const entry = byFixture.get(amendMatch.value);
+    const against = entry ? nameOf.get(entry.opponentId) : 'this opponent';
+    // Removing a result is the one action here that destroys data, so it asks.
+    if (!confirm(`Remove your ${entry.myGames}-${entry.theirGames} against ${against}?`)) return;
+
+    busy(true);
+    amendStatus.textContent = 'Removing…';
+    try {
+      const response = await fetch(
+        `./api/results?fixtureId=${encodeURIComponent(amendMatch.value)}`,
+        { method: 'DELETE', credentials: 'same-origin' },
+      );
+      const body = await response.json().catch(() => ({}));
+      if (response.ok && body.ok) {
+        location.reload();
+        return;
+      }
+      amendStatus.textContent = body.error
+        ?? (response.ok ? 'Removal is unavailable just now.' : 'Could not remove the result.');
+      busy(false);
+    } catch {
+      amendStatus.textContent = 'Could not reach the server. Please try again.';
+      busy(false);
+    }
+  });
+}
+
 const signOut = ' <a class="account__action" href="./api/logout">Sign out</a>';
 
 const state = chooseSigninState({
@@ -206,7 +311,9 @@ if (state === 'read-only') {
   account.innerHTML = `<span class="account__note">${esc(me.player.short)}</span>` + signOut;
   section.hidden = false;
   status.textContent = 'You have no group matches. Playoff results are recorded by an admin.';
+  showAmend(me.player);
 } else {
   account.innerHTML = `<span class="account__note">${esc(me.player.short)}</span>` + signOut;
   showReportForm(me.player);
+  showAmend(me.player);
 }

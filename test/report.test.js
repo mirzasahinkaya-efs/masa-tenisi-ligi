@@ -6,6 +6,8 @@ import {
   resolvePlayer,
   playableFixtures,
   findOpenFixture,
+  findRecordedFixture,
+  recordedFor,
   orientResult,
 } from '../lib/report.js';
 
@@ -234,4 +236,91 @@ test('orientResult mirrors output across the two opposite-orientation fixtures o
   assert.deepEqual(storedForward, { p1Games: 2, p2Games: 1 });
   assert.deepEqual(storedReverse, { p1Games: 1, p2Games: 2 });
   assert.notDeepEqual(storedForward, storedReverse);
+});
+
+// --- finding a result to edit or remove ---
+
+test('findRecordedFixture returns the fixture and its result together', () => {
+  const league = makeLeague([
+    { fixtureId: 'A-R1-M1', p1Games: 2, p2Games: 1, reportedBy: 'player:mirza', reportedAt: 'y' },
+  ]);
+  const found = findRecordedFixture(league, 'A-R1-M1');
+  assert.equal(found.ok, true);
+  assert.deepEqual([found.fixture.p1, found.fixture.p2], ['mirza', 'tolga']);
+  assert.deepEqual([found.result.p1Games, found.result.p2Games], [2, 1]);
+});
+
+test('an unrecorded fixture is distinguished from one that does not exist', () => {
+  // Two different mistakes: asking to edit a match nobody played, versus asking
+  // to edit a fixture id that was never in this season. The caller says
+  // different things about each, so they cannot share an error.
+  const league = makeLeague([]);
+  assert.deepEqual(findRecordedFixture(league, 'A-R1-M1'), { ok: false, error: 'NOT_RECORDED' });
+  assert.deepEqual(findRecordedFixture(league, 'NOPE-R9-M9'), { ok: false, error: 'NO_FIXTURE' });
+});
+
+test('findRecordedFixture refuses a missing or non-string id rather than guessing', () => {
+  const league = makeLeague([
+    { fixtureId: 'A-R1-M1', p1Games: 2, p2Games: 1, reportedBy: 'x', reportedAt: 'y' },
+  ]);
+  for (const id of [undefined, null, '', 0, {}, [], ['A-R1-M1']]) {
+    assert.deepEqual(
+      findRecordedFixture(league, id), { ok: false, error: 'NO_FIXTURE' }, JSON.stringify(id),
+    );
+  }
+});
+
+test('it does not decide who may touch the result', () => {
+  // The participant rule lives in canReport. If this function also enforced it,
+  // an admin correction would have to bypass one of the two checks.
+  const league = makeLeague([
+    { fixtureId: 'A-R1-M1', p1Games: 2, p2Games: 1, reportedBy: 'x', reportedAt: 'y' },
+  ]);
+  const found = findRecordedFixture(league, 'A-R1-M1');
+  assert.equal(found.ok, true, 'a stranger still gets the fixture; the gate is elsewhere');
+});
+
+test('recordedFor states each score from the asking player\'s own side', () => {
+  // The pair meets twice in opposite orientations, so a player who won both is
+  // p1Games in one meeting and p2Games in the other. Both must read as a win.
+  const league = makeLeague([
+    { fixtureId: 'A-R1-M1', p1Games: 2, p2Games: 0, reportedBy: 'x', reportedAt: 'y' },
+    { fixtureId: 'A-R4-M1', p1Games: 0, p2Games: 2, reportedBy: 'x', reportedAt: 'y' },
+  ]);
+  const forward = fixtures.find((f) => f.id === 'A-R1-M1');
+  const reverse = fixtures.find((f) => f.id === 'A-R4-M1');
+  assert.deepEqual([forward.p1, reverse.p1], ['mirza', 'tolga'], 'premise: orientations differ');
+
+  const mine = recordedFor(league, 'mirza');
+  assert.equal(mine.length, 2);
+  for (const entry of mine) {
+    assert.equal(entry.opponentId, 'tolga');
+    assert.deepEqual([entry.myGames, entry.theirGames], [2, 0], entry.fixtureId);
+  }
+
+  // And the same two results read as losses for tolga.
+  for (const entry of recordedFor(league, 'tolga')) {
+    assert.deepEqual([entry.myGames, entry.theirGames], [0, 2], entry.fixtureId);
+  }
+});
+
+test('recordedFor lists only matches that have a result, and only the player\'s own', () => {
+  const league = makeLeague([
+    { fixtureId: 'A-R1-M1', p1Games: 2, p2Games: 1, reportedBy: 'x', reportedAt: 'y' },
+    { fixtureId: 'B-R1-M1', p1Games: 2, p2Games: 1, reportedBy: 'x', reportedAt: 'y' },
+  ]);
+  const mine = recordedFor(league, 'mirza');
+  assert.deepEqual(mine.map((entry) => entry.fixtureId), ['A-R1-M1']);
+  assert.equal(mine[0].round, 1);
+  assert.equal(mine[0].stage, 'group');
+});
+
+test('recordedFor is empty for a player with nothing recorded, and for nobody', () => {
+  const league = makeLeague([
+    { fixtureId: 'A-R1-M1', p1Games: 2, p2Games: 1, reportedBy: 'x', reportedAt: 'y' },
+  ]);
+  assert.deepEqual(recordedFor(league, 'aytac'), []);
+  assert.deepEqual(recordedFor(league, undefined), []);
+  assert.deepEqual(recordedFor(league, ''), []);
+  assert.deepEqual(recordedFor(makeLeague([]), 'mirza'), []);
 });

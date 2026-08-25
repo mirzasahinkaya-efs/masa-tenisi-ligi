@@ -16,6 +16,10 @@
   --blue: #3d9ce8;
   --blue-mid: #2d94dc;
   --green: #4ec9a0;
+  /* 6.07:1 on --bg, and --bg is 6.07:1 on it for the filled hover state, so both
+     directions clear AA. The obvious #b3261e measures 2.64:1 here and is
+     effectively invisible on this background. */
+  --red: #f0736c;
   --border: rgba(255, 255, 255, .12);
   --border-strong: rgba(255, 255, 255, .18);
   --text: rgba(255, 255, 255, .92);
@@ -244,3 +248,24 @@ main > section { scroll-margin-top: 56px; }
 @media (max-width: 720px) {
   .report, .signin { grid-template-columns: 1fr; }
 }
+
+/* Correcting a result sits under recording one: same controls, quieter heading,
+   and a visibly different button for the one action that destroys data. */
+.amend__heading {
+  margin: 26px 0 12px;
+  font: 600 11px 'Montserrat', sans-serif; letter-spacing: .14em;
+  text-transform: uppercase; color: var(--label);
+}
+.amend__remove {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  margin: 12px 0 0; font-size: 13px; color: var(--muted);
+}
+.button--danger {
+  padding: 8px 10px;
+  font: 600 11px 'Montserrat', sans-serif; letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--red); background: var(--bg);
+  border: 1px solid var(--red); cursor: pointer;
+}
+.button--danger:hover { color: var(--bg); background: var(--red); }
+.button--danger:disabled { opacity: .5; cursor: default; }

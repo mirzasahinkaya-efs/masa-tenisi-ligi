@@ -1,7 +1,10 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
-import { handleResultPost } from '../functions/api/results.js';
+import {
+  handleResultPost, handleResultPatch, handleResultDelete,
+} from '../functions/api/results.js';
+import { findOpenFixture } from '../lib/report.js';
 import { computeTable } from '../lib/standings.js';
 import { bestFourthPlayerId } from '../lib/bracket.js';
 import { signToken } from '../lib/session.js';
@@ -492,4 +495,252 @@ test('an unauthenticated caller is refused before configuration is reported', as
     { SESSION_SECRET: env.SESSION_SECRET }, { nowSeconds: () => NOW },
   );
   assert.equal(response.status, 401);
+});
+
+// --- correcting and removing a recorded result ---
+
+const patchAs = async (body, token) => new Request('https://league.test/api/results', {
+  method: 'PATCH',
+  headers: {
+    'content-type': 'application/json',
+    ...(token ? { cookie: `${SESSION_COOKIE}=${token}` } : {}),
+  },
+  body: JSON.stringify(body),
+});
+
+const deleteAs = async (fixtureId, token) => new Request(
+  `https://league.test/api/results${fixtureId === undefined ? '' : `?fixtureId=${encodeURIComponent(fixtureId)}`}`,
+  { method: 'DELETE', headers: token ? { cookie: `${SESSION_COOKIE}=${token}` } : {} },
+);
+
+/** A league where mirza has one recorded 2-0, plus the ids involved. */
+function withMirzaResult() {
+  const league = structuredClone(base);
+  const fixture = league.fixtures.find((f) => f.p1 === 'mirza' || f.p2 === 'mirza');
+  const opponentId = fixture.p1 === 'mirza' ? fixture.p2 : fixture.p1;
+  const mirzaIsP1 = fixture.p1 === 'mirza';
+  league.results.push({
+    fixtureId: fixture.id,
+    p1Games: mirzaIsP1 ? 2 : 0,
+    p2Games: mirzaIsP1 ? 0 : 2,
+    reportedBy: 'player:mirza',
+    reportedAt: '2026-08-21T00:00:00.000Z',
+  });
+  return { league, fixtureId: fixture.id, opponentId, mirzaIsP1 };
+}
+
+test('a player corrects their own score, on their own side of the fixture', async () => {
+  const { league, fixtureId, mirzaIsP1 } = withMirzaResult();
+  const fake = fakeStore(league);
+  const response = await handleResultPatch(
+    await patchAs({ fixtureId, myGames: 1, theirGames: 2 }, await passphraseSession('mirza')),
+    env, deps(fake),
+  );
+  assert.equal(response.status, 200, JSON.stringify(await response.json()));
+
+  const stored = fake.state.league.results.find((r) => r.fixtureId === fixtureId);
+  // Mirza now LOST 1-2, so his games must land on his own side whichever it is.
+  assert.equal(mirzaIsP1 ? stored.p1Games : stored.p2Games, 1);
+  assert.equal(mirzaIsP1 ? stored.p2Games : stored.p1Games, 2);
+  assert.equal(stored.reportedBy, 'player:mirza');
+  assert.equal(fake.state.league.results.length, 1, 'a correction must not add a second result');
+});
+
+test('the correction commit names the old score as well as the new one', async () => {
+  const { league, fixtureId } = withMirzaResult();
+  const fake = fakeStore(league);
+  await handleResultPatch(
+    await patchAs({ fixtureId, myGames: 2, theirGames: 1 }, await passphraseSession('mirza')),
+    env, deps(fake),
+  );
+  const message = fake.state.commits.at(-1);
+  assert.match(message, /^Correct /);
+  assert.match(message, new RegExp(fixtureId));
+  assert.match(message, /was 2-0/, message);
+});
+
+test('a player removes their own result and the fixture opens again', async () => {
+  const { league, fixtureId, opponentId } = withMirzaResult();
+  const fake = fakeStore(league);
+  const response = await handleResultDelete(
+    await deleteAs(fixtureId, await passphraseSession('mirza')), env, deps(fake),
+  );
+  assert.equal(response.status, 200, JSON.stringify(await response.json()));
+  assert.equal(fake.state.league.results.length, 0);
+  assert.match(fake.state.commits.at(-1), /^Remove /);
+
+  // The point of removing it: the match can be recorded again.
+  const again = findOpenFixture(fake.state.league, 'mirza', opponentId);
+  assert.equal(again.ok, true);
+  assert.equal(again.fixture.id, fixtureId);
+});
+
+test('neither correcting nor removing works without a session', async () => {
+  const { league, fixtureId } = withMirzaResult();
+  for (const [label, request] of [
+    ['patch', await patchAs({ fixtureId, myGames: 2, theirGames: 1 }, null)],
+    ['delete', await deleteAs(fixtureId, null)],
+  ]) {
+    const fake = fakeStore(structuredClone(league));
+    const handler = label === 'patch' ? handleResultPatch : handleResultDelete;
+    const response = await handler(request, env, deps(fake));
+    assert.equal(response.status, 401, label);
+    assert.equal(fake.state.commits.length, 0, label);
+  }
+});
+
+test('a player cannot touch a match they were not in', async () => {
+  // tolga is in mirza's group but not in mirza's fixture.
+  const { league, fixtureId, opponentId } = withMirzaResult();
+  const outsider = league.groups.A.concat(league.groups.B)
+    .find((id) => id !== 'mirza' && id !== opponentId);
+
+  for (const [label, request] of [
+    ['patch', await patchAs({ fixtureId, myGames: 2, theirGames: 1 }, await passphraseSession(outsider))],
+    ['delete', await deleteAs(fixtureId, await passphraseSession(outsider))],
+  ]) {
+    const fake = fakeStore(structuredClone(league));
+    const handler = label === 'patch' ? handleResultPatch : handleResultDelete;
+    const response = await handler(request, env, deps(fake));
+    assert.equal(response.status, 403, `${label} as ${outsider}`);
+    assert.equal(fake.state.league.results.length, 1, label);
+    assert.equal(fake.state.commits.length, 0, label);
+  }
+});
+
+test('an unknown fixture and an unrecorded one are reported differently', async () => {
+  const { league } = withMirzaResult();
+  const token = await passphraseSession('mirza');
+  // A real fixture mirza is in, but with no result recorded against it.
+  const unrecorded = league.fixtures.find(
+    (f) => (f.p1 === 'mirza' || f.p2 === 'mirza') && !league.results.some((r) => r.fixtureId === f.id),
+  ).id;
+
+  const nonexistent = await handleResultDelete(
+    await deleteAs('NOPE-R9-M9', token), env, deps(fakeStore(structuredClone(league))),
+  );
+  assert.equal(nonexistent.status, 404);
+  assert.match((await nonexistent.json()).error, /No such match/);
+
+  const empty = await handleResultDelete(
+    await deleteAs(unrecorded, token), env, deps(fakeStore(structuredClone(league))),
+  );
+  assert.equal(empty.status, 404);
+  assert.match((await empty.json()).error, /no result to change/);
+});
+
+test('a missing fixtureId is refused rather than removing something arbitrary', async () => {
+  const { league } = withMirzaResult();
+  const fake = fakeStore(league);
+  const response = await handleResultDelete(
+    await deleteAs(undefined, await passphraseSession('mirza')), env, deps(fake),
+  );
+  assert.equal(response.status, 404);
+  assert.equal(fake.state.league.results.length, 1, 'nothing may be removed');
+});
+
+test('a correction is held to the stage format, like a new result', async () => {
+  const { league, fixtureId } = withMirzaResult();
+  const fake = fakeStore(league);
+  // 3-1 wins a playoff match, not a group one.
+  const response = await handleResultPatch(
+    await patchAs({ fixtureId, myGames: 3, theirGames: 1 }, await passphraseSession('mirza')),
+    env, deps(fake),
+  );
+  assert.equal(response.status, 400);
+  assert.match((await response.json()).error, /best-of-3/);
+  const unchanged = fake.state.league.results[0];
+  assert.deepEqual([unchanged.p1Games, unchanged.p2Games].sort(), [0, 2]);
+});
+
+test('a result removed while the request was in flight is a conflict, not a silent success', async () => {
+  const { league, fixtureId } = withMirzaResult();
+  const store = {
+    read: async () => ({ league: structuredClone(league), sha: 's' }),
+    update: async (mutate) => {
+      // Someone else removed it in the gap.
+      const raced = structuredClone(league);
+      raced.results = [];
+      try {
+        mutate(raced);
+      } catch (error) {
+        return { ok: false, error: 'REJECTED', reason: error.message };
+      }
+      return { ok: true, league: raced };
+    },
+  };
+  const token = await passphraseSession('mirza');
+  for (const [label, request, handler] of [
+    ['patch', await patchAs({ fixtureId, myGames: 2, theirGames: 1 }, token), handleResultPatch],
+    ['delete', await deleteAs(fixtureId, token), handleResultDelete],
+  ]) {
+    const response = await handler(request, env, { nowSeconds: () => NOW, makeStore: () => store });
+    assert.equal(response.status, 409, label);
+  }
+});
+
+test('correcting and removing need the store configured, like recording does', async () => {
+  const { league, fixtureId } = withMirzaResult();
+  const token = await passphraseSession('mirza');
+  const broken = { SESSION_SECRET: env.SESSION_SECRET };
+  for (const [label, request, handler] of [
+    ['patch', await patchAs({ fixtureId, myGames: 2, theirGames: 1 }, token), handleResultPatch],
+    ['delete', await deleteAs(fixtureId, token), handleResultDelete],
+  ]) {
+    const response = await handler(request, broken, { nowSeconds: () => NOW });
+    assert.equal(response.status, 503, label);
+    assert.match((await response.json()).error, /not configured/, label);
+  }
+  assert.equal(league.results.length, 1);
+});
+
+test('an admin correcting someone else\'s match is sent to the CLI, not refused vaguely', async () => {
+  /*
+   * The case that distinguishes the two rules. mirza is a season admin, so
+   * canReport would admit him to a fixture he is not in — but a score given as
+   * "my games" has no side to land on for someone outside the fixture. He gets a
+   * message naming the tool that can do it, while a non-admin outsider gets the
+   * plain refusal. Without both assertions, either check could be deleted
+   * unnoticed because the other would still return 403.
+   */
+  const league = structuredClone(base);
+  const other = league.fixtures.find((f) => f.p1 !== 'mirza' && f.p2 !== 'mirza');
+  league.results.push({
+    fixtureId: other.id, p1Games: 2, p2Games: 0, reportedBy: 'player:x', reportedAt: 'y',
+  });
+  assert.ok(league.season.admins.includes(slackOf('mirza')), 'premise: mirza is an admin');
+
+  const asAdmin = await handleResultPatch(
+    await patchAs({ fixtureId: other.id, myGames: 2, theirGames: 1 }, await session(slackOf('mirza'))),
+    env, deps(fakeStore(structuredClone(league))),
+  );
+  assert.equal(asAdmin.status, 403);
+  assert.match((await asAdmin.json()).error, /--fix/);
+
+  // The same fixture, as a non-admin who is also not in it.
+  const outsider = league.players.find(
+    (p) => ![other.p1, other.p2].includes(p.id) && !league.season.admins.includes(p.slackId),
+  ).id;
+  const asOutsider = await handleResultPatch(
+    await patchAs({ fixtureId: other.id, myGames: 2, theirGames: 1 }, await passphraseSession(outsider)),
+    env, deps(fakeStore(structuredClone(league))),
+  );
+  assert.equal(asOutsider.status, 403);
+  assert.match((await asOutsider.json()).error, /only correct your own/);
+});
+
+test('an admin CAN remove someone else\'s result, where nothing needs orienting', async () => {
+  // The asymmetry stated plainly: delete has no "my games", so the admin
+  // allowance in canReport is meaningful there and blocked in PATCH.
+  const league = structuredClone(base);
+  const other = league.fixtures.find((f) => f.p1 !== 'mirza' && f.p2 !== 'mirza');
+  league.results.push({
+    fixtureId: other.id, p1Games: 2, p2Games: 0, reportedBy: 'player:x', reportedAt: 'y',
+  });
+  const fake = fakeStore(league);
+  const response = await handleResultDelete(
+    await deleteAs(other.id, await session(slackOf('mirza'))), env, deps(fake),
+  );
+  assert.equal(response.status, 200, JSON.stringify(await response.json()));
+  assert.equal(fake.state.league.results.length, 0);
 });

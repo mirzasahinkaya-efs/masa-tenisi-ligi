@@ -82,9 +82,36 @@ shared passphrase, submit a score for a match you played. That needs a host that
 runs `/api/*` — see [Deployment](#deployment) for which one, and why there is
 more than one.
 
-Corrections go through `--fix` and were never in the web form: a correction needs
-a human to notice the discrepancy rather than a second self-service submission.
-Playoff results are cross-group, so the form never offers them either.
+### Fixing a result
+
+A recorded result can be corrected or removed, on the site or from a checkout:
+
+| | Site | Checkout |
+| --- | --- | --- |
+| Correct a score | Fix a result → pick the match → new score → **Correct** | `npm run score -- a b 2-1 --fix` |
+| Remove a result | Fix a result → **Remove this result** | revert the commit |
+
+**Who may do it, and the limit of that.** A player may correct or remove a match
+they took part in. The passphrase is shared, so "took part in" means "the name
+they signed in as" — anyone holding it could sign in as someone else and change
+their results. That is a deliberate, accepted trade for a league of thirteen
+people, and it is why every change is a commit: `Record …`, `Correct … , was 2-0`
+and `Remove … , was 2-0` are all in `git log`, which is the accountability.
+
+Removing a result reopens the fixture, so the match can be recorded again.
+
+Two asymmetries worth knowing:
+
+- **Correcting requires being in the fixture**, even for an admin. A score is
+  submitted as "my games" and "their games", which has no meaning for someone
+  with no side of the match — so an admin is pointed at `--fix` instead of
+  having their perspective guessed. Removing has nothing to orient, so the admin
+  allowance in `canReport` does apply there.
+- **Playoff results are cross-group**, so the recording form never offers them.
+  They are recorded from a checkout, and can be corrected there.
+
+Both handlers re-check the result inside the write, so a correction or removal
+that raced someone else is a 409 rather than a silent overwrite.
 
 ## Deployment
 
