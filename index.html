@@ -86,21 +86,23 @@
     </form>
     <p class="report__status" id="report-status" role="status"></p>
 
-    <div id="amend" hidden>
+    <div class="amend" id="amend" hidden>
       <h3 class="amend__heading">Fix a result</h3>
-      <form class="signin" id="amend-form">
+      <!-- Same grid as the recording form above: one label/control pair per
+           column, with both actions sharing the last cell so they read as two
+           things you can do to the one match you picked. -->
+      <form class="report" id="amend-form">
         <label for="amend-match">Match</label>
         <select id="amend-match" name="match" required></select>
         <label for="amend-mine">Your games</label>
         <select id="amend-mine" name="mine" required></select>
         <label for="amend-theirs">Their games</label>
         <select id="amend-theirs" name="theirs" required></select>
-        <button type="submit">Correct</button>
+        <span class="report__actions">
+          <button type="submit">Correct</button>
+          <button type="button" class="button--danger" id="amend-delete">Remove</button>
+        </span>
       </form>
-      <p class="amend__remove">
-        Recorded by mistake?
-        <button type="button" class="button--danger" id="amend-delete">Remove this result</button>
-      </p>
       <p class="report__status" id="amend-status" role="status"></p>
     </div>
   </section>

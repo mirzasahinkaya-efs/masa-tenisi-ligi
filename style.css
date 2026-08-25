@@ -191,15 +191,6 @@ main > section { scroll-margin-top: 56px; }
   margin: 0 0 6px; padding-bottom: 6px; border-bottom: 1px solid var(--border);
 }
 
-@media (max-width: 720px) {
-  .groups, .bracket-phase__matches { grid-template-columns: 1fr; }
-  .masthead { padding: 28px 16px 16px; }
-  .sectionnav { padding: 0 16px; }
-  .season-strip { gap: 1px; }
-  .season-strip .tick { height: 4px; }
-  main { padding: 16px; }
-}
-
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   *, *::before, *::after { transition: none !important; }
@@ -245,21 +236,23 @@ main > section { scroll-margin-top: 56px; }
 .report__status { margin: 12px 0 0; font-size: 13px; color: var(--muted); min-height: 1.2em; }
 .signin__note { margin: 0 0 14px; font-size: 13px; color: var(--muted); max-width: 64ch; }
 
-@media (max-width: 720px) {
-  .report, .signin { grid-template-columns: 1fr; }
-}
 
-/* Correcting a result sits under recording one: same controls, quieter heading,
-   and a visibly different button for the one action that destroys data. */
+/* Correcting a result sits under recording one: the same grid, so the two forms
+   share a column rhythm, separated by a rule so it reads as its own block. */
+.amend {
+  margin-top: 22px; padding-top: 4px;
+  border-top: 1px solid var(--border);
+}
 .amend__heading {
-  margin: 26px 0 12px;
+  margin: 14px 0 12px;
   font: 600 11px 'Montserrat', sans-serif; letter-spacing: .14em;
   text-transform: uppercase; color: var(--label);
 }
-.amend__remove {
-  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
-  margin: 12px 0 0; font-size: 13px; color: var(--muted);
-}
+/* Both actions occupy the grid's last cell, so the row keeps seven columns and
+   the destructive one sits beside — never instead of — the primary one. */
+.report__actions { display: flex; gap: 8px; }
+.report__actions button { flex: 0 0 auto; }
+
 .button--danger {
   padding: 8px 10px;
   font: 600 11px 'Montserrat', sans-serif; letter-spacing: .14em;
@@ -269,3 +262,16 @@ main > section { scroll-margin-top: 56px; }
 }
 .button--danger:hover { color: var(--bg); background: var(--red); }
 .button--danger:disabled { opacity: .5; cursor: default; }
+
+@media (max-width: 720px) {
+  .groups, .bracket-phase__matches { grid-template-columns: 1fr; }
+  /* Every control grid collapses to one column: a seven-column row cannot fit a
+     phone, and the paired actions stack with it. */
+  .report, .signin { grid-template-columns: 1fr; }
+  .report__actions { display: grid; grid-template-columns: 1fr 1fr; }
+  .masthead { padding: 28px 16px 16px; }
+  .sectionnav { padding: 0 16px; }
+  .season-strip { gap: 1px; }
+  .season-strip .tick { height: 4px; }
+  main { padding: 16px; }
+}
